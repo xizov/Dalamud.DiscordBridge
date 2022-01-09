@@ -731,10 +731,20 @@ namespace Dalamud.DiscordBridge
                     PluginLog.Error("Could not find channel {0} for {1}", channelConfig.Key, chatType);
                     continue;
                 }
-                
-                var webhookClient = await GetOrCreateWebhookClient(socketChannel);
-                await webhookClient.SendMessageAsync($"{prefix} {message}",
-                    username: $"Retainer sold {name}", avatarUrl: iconurl);
+
+                // add handling for webhook vs embed here
+                if (socketChannel is SocketDMChannel)
+                {
+                    var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
+                    await SendPrettyEmbed((ISocketMessageChannel)DMChannel, message, $"Retainer sold {name}", iconurl, EmbedColorFine);
+                }
+                else
+                {
+                    var webhookClient = await GetOrCreateWebhookClient(socketChannel);
+                    await webhookClient.SendMessageAsync($"{prefix} {message}",
+                        username: $"Retainer sold {name}", avatarUrl: iconurl);
+                }
+                    
             }
 
         }
