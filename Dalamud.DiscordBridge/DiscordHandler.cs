@@ -663,6 +663,26 @@ namespace Dalamud.DiscordBridge
                 .ConfigureAwait(false);
         }
 
+        private async Task SendPrettyEmbed(ISocketMessageChannel channel, string message, string title, string iconurl, uint color)
+        {
+            var builder = new EmbedBuilder()
+                .WithTitle(title)
+                .WithDescription(message)
+                .WithColor(new Color(color))
+                .WithFooter(footer => {
+                    footer
+                        .WithText("Dalamud Discord Bridge")
+                        .WithIconUrl(Constant.LogoLink);
+                })
+                .WithThumbnailUrl(iconurl);
+
+            var embed = builder.Build();
+            await channel.SendMessageAsync(
+                    null,
+                    embed: embed)
+                .ConfigureAwait(false);
+        }
+
         /// <summary>
         /// Check if the sender of this message is set as the owner of this plugin, and send an error message to the specified channel if not null.
         /// </summary>
@@ -849,38 +869,47 @@ namespace Dalamud.DiscordBridge
                     continue;
                 }
 
-                var webhookClient = await GetOrCreateWebhookClient(socketChannel);
                 var messageContent = chatType != XivChatTypeExtensions.IpcChatType ? $"{prefix}**[{chatTypeText}]** {message}" : $"{prefix} {message}";
 
 
-                // check for duplicates before sending
-                // straight up copied from the previous bot, but I have no way to test this myself.
-                var recentMessages = (socketChannel as SocketTextChannel).GetCachedMessages();
-                var recentMsg = recentMessages.FirstOrDefault(msg => msg.Content == messageContent);
-
-                
-                if (this.plugin.Config.DuplicateCheckMS > 0 && recentMsg != null)
+                // add handling for webhook vs embed here
+                if (socketChannel is SocketDMChannel)
                 {
-                    long msgDiff = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - recentMsg.Timestamp.ToUnixTimeMilliseconds();
-                    
-                    if (msgDiff < this.plugin.Config.DuplicateCheckMS)
-                    {
-                        PluginLog.Log($"[IN TESTING]\n DIFF:{msgDiff}ms Skipping duplicate message: {messageContent}");
-                        return;
-                    }
-                        
+                    var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
+                    await SendPrettyEmbed((ISocketMessageChannel)DMChannel, messageContent, displayName, avatarUrl, EmbedColorFine);
                 }
+                else
+                {
+                    var webhookClient = await GetOrCreateWebhookClient(socketChannel);
 
-                await webhookClient.SendMessageAsync(
-                    messageContent,username: displayName, avatarUrl: avatarUrl, 
-                    allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)
-                );
+                    // check for duplicates before sending
+                    // straight up copied from the previous bot, but I have no way to test this myself.
+                    var recentMessages = (socketChannel as SocketTextChannel).GetCachedMessages();
+                    var recentMsg = recentMessages.FirstOrDefault(msg => msg.Content == messageContent);
 
-                // the message to a list of recently sent messages. 
-                // If someone else sent the same thing at the same time
-                // both will need to be checked and the earlier timestamp kept
-                // while the newer one is removed
-                // refer to https://discord.com/channels/581875019861328007/684745859497590843/791207648619266060
+                    if (this.plugin.Config.DuplicateCheckMS > 0 && recentMsg != null)
+                    {
+                        long msgDiff = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - recentMsg.Timestamp.ToUnixTimeMilliseconds();
+
+                        if (msgDiff < this.plugin.Config.DuplicateCheckMS)
+                        {
+                            PluginLog.Log($"[IN TESTING]\n DIFF:{msgDiff}ms Skipping duplicate message: {messageContent}");
+                            return;
+                        }
+
+                    }
+
+                    // the message to a list of recently sent messages. 
+                    // If someone else sent the same thing at the same time
+                    // both will need to be checked and the earlier timestamp kept
+                    // while the newer one is removed
+                    // refer to https://discord.com/channels/581875019861328007/684745859497590843/791207648619266060
+
+                    await webhookClient.SendMessageAsync(
+                        messageContent, username: displayName, avatarUrl: avatarUrl,
+                        allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)
+                    );
+                }
             }
         }
 
@@ -918,9 +947,21 @@ namespace Dalamud.DiscordBridge
 
                 var prefix = this.plugin.Config.CFPrefixConfig ?? "";
 
-                var webhookClient = await GetOrCreateWebhookClient(socketChannel);
-                await webhookClient.SendMessageAsync($"{prefix}", embeds: new[] {embedBuilder.Build()},
+                // add handling for webhook vs embed here
+                if (socketChannel is SocketDMChannel)
+                {
+                    embedBuilder.WithAuthor(new EmbedAuthorBuilder {Name = "Dalamud Discord Bridge", IconUrl = Constant.LogoLink});
+                    var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
+                    await DMChannel.SendMessageAsync($"{prefix}", embed: embedBuilder.Build());
+                }
+                else
+                {
+                    var webhookClient = await GetOrCreateWebhookClient(socketChannel);
+                    await webhookClient.SendMessageAsync($"{prefix}", embeds: new[] { embedBuilder.Build() },
                     username: "Dalamud Discord Bridge", avatarUrl: Constant.LogoLink);
+                }
+
+                
             }
         }
 
