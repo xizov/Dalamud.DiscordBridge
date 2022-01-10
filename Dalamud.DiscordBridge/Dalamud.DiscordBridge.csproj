@@ -9,7 +9,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <NoWarn>IDE0003</NoWarn>
-    <AssemblyVersion>1.2.2.0</AssemblyVersion>
+    <AssemblyVersion>1.2.2.1</AssemblyVersion>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="2.1.2" />
+    <PackageReference Include="DalamudPackager" Version="2.1.5" />
     <PackageReference Include="Discord.Net" Version="2.3.1" />
     <PackageReference Include="Discord.Net.Core" Version="2.3.1" />
     <PackageReference Include="Discord.Net.Rest" Version="2.3.1" />
