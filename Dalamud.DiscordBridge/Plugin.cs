@@ -176,8 +176,6 @@ namespace Dalamud.DiscordBridge
             this.Interface.UiBuilder.Draw -= this.ui.Draw;
 
             this.State.CfPop -= this.ClientStateOnCfPop;
-
-            this.Interface.Dispose();
         }
 
         public void Dispose()
