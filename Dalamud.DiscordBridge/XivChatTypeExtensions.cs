@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.Text;
@@ -281,6 +281,20 @@ namespace Dalamud.DiscordBridge
 
                 // Custom types not defined in Dalamud
                 {
+                    IpcChatType, new XivChatTypeInfo
+                    {
+                        Slug = "ipc",
+                        FancyName = "IPC"
+                    }
+                },
+                {
+                    (XivChatType)55, new XivChatTypeInfo
+                    {
+                        Slug = "alarm",
+                        FancyName = "Alarm"
+                    }
+                },
+                {
                     (XivChatType)61, new XivChatTypeInfo
                     {
                         Slug = "npctalk",
@@ -295,6 +309,20 @@ namespace Dalamud.DiscordBridge
                     }
                 },
                 {
+                    (XivChatType)69, new XivChatTypeInfo
+                    {
+                        Slug = "fcannounce",
+                        FancyName = "Free Company Announcement"
+                    }
+                },
+                {
+                    (XivChatType)70, new XivChatTypeInfo
+                    {
+                        Slug = "fclogin",
+                        FancyName = "Free Company Login/Logout"
+                    }
+                },
+                {
                     XivChatType.RetainerSale, new XivChatTypeInfo
                     {
                         Slug = "retainersale",
@@ -302,10 +330,17 @@ namespace Dalamud.DiscordBridge
                     }
                 },
                 {
-                    IpcChatType, new XivChatTypeInfo
+                    (XivChatType)73, new XivChatTypeInfo
                     {
-                        Slug = "ipc",
-                        FancyName = "IPC"
+                        Slug = "sign",
+                        FancyName = "sign"
+                    }
+                },
+                {
+                    (XivChatType)74, new XivChatTypeInfo
+                    {
+                        Slug = "random",
+                        FancyName = "Random Number"
                     }
                 },
                 // Special handling for GM types

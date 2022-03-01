@@ -116,9 +116,10 @@ namespace Dalamud.DiscordBridge
         [DoNotShowInHelp]
         public void DebugCommand(string command, string args)
         {
+            string[] commandArgs = args.Split(' ');
             this.Discord.MessageQueue.Enqueue(new QueuedChatEvent
             {
-                ChatType = XivChatType.Say,
+                ChatType = XivChatTypeExtensions.GetBySlug(commandArgs?[0] ?? "e"),
                 Message = new SeString(new Payload[]{new TextPayload("Test Message"), }),
                 Sender = new SeString(new Payload[]{new TextPayload("Test Sender"), })
             });
@@ -156,7 +157,7 @@ namespace Dalamud.DiscordBridge
         {
             foreach (var keyValuePair in XivChatTypeExtensions.TypeInfoDict)
             {
-                Chat.Print($"{keyValuePair.Key.GetSlug()} - {keyValuePair.Key.GetFancyName()}");
+                Chat.Print($"({(int)keyValuePair.Key}) {keyValuePair.Key.GetSlug()} - {keyValuePair.Key.GetFancyName()}");
             }
         }
 

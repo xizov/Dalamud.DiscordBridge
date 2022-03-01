@@ -256,6 +256,16 @@ namespace Dalamud.DiscordBridge
                         {
                             config.UnsetUnique(DefaultChatTypes);
                         }
+                        else if (selectedKind == "tell")
+                        {
+                            config.UnsetUnique(XivChatType.TellOutgoing);
+                            config.UnsetUnique(XivChatType.TellIncoming);
+                        }
+                        else if (selectedKind == "p")
+                        {
+                            config.UnsetUnique(XivChatType.Party);
+                            config.UnsetUnique(XivChatType.CrossParty);
+                        }
                         else
                         {
                             var chatType = XivChatTypeExtensions.GetBySlug(selectedKind);
@@ -355,7 +365,26 @@ namespace Dalamud.DiscordBridge
                     foreach (var selectedKind in kinds)
                     {
                         var type = XivChatTypeExtensions.GetBySlug(selectedKind);
-                        this.plugin.Config.PrefixConfigs.Remove(type);
+                        // Special handling for chat types that share a type
+                        if (selectedKind == "tell")
+                        {
+                            if (this.plugin.Config.PrefixConfigs.ContainsKey(XivChatType.TellOutgoing))
+                                this.plugin.Config.PrefixConfigs.Remove(XivChatType.TellOutgoing);
+                            if (this.plugin.Config.PrefixConfigs.ContainsKey(XivChatType.TellIncoming))
+                                this.plugin.Config.PrefixConfigs.Remove(XivChatType.TellIncoming);
+                        }
+                        else if (selectedKind == "p")
+                        {
+                            if (this.plugin.Config.PrefixConfigs.ContainsKey(XivChatType.Party))
+                                this.plugin.Config.PrefixConfigs.Remove(XivChatType.Party);
+                            if (this.plugin.Config.PrefixConfigs.ContainsKey(XivChatType.CrossParty))
+                                this.plugin.Config.PrefixConfigs.Remove(XivChatType.CrossParty);
+                        }
+                        else
+                        {
+                            this.plugin.Config.PrefixConfigs.Remove(type);
+                        }
+                        
                     }
 
                     this.plugin.Config.Save();
