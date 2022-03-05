@@ -204,6 +204,16 @@ namespace Dalamud.DiscordBridge
                         {
                             config.SetUnique(DefaultChatTypes);
                         }
+                        else if (selectedKind == "tell")
+                        {
+                            config.SetUnique(XivChatType.TellOutgoing);
+                            config.SetUnique(XivChatType.TellIncoming);
+                        }
+                        else if (selectedKind == "p")
+                        {
+                            config.SetUnique(XivChatType.Party);
+                            config.SetUnique(XivChatType.CrossParty);
+                        }
                         else
                         {
                             var chatType = XivChatTypeExtensions.GetBySlug(selectedKind);
@@ -320,8 +330,23 @@ namespace Dalamud.DiscordBridge
 
                     foreach (var selectedKind in kinds)
                     {
-                        var type = XivChatTypeExtensions.GetBySlug(selectedKind);
-                        this.plugin.Config.PrefixConfigs[type] = args[2];
+                        // Special handling for chat types that share a type
+                        if (selectedKind == "tell")
+                        {
+                            this.plugin.Config.PrefixConfigs[XivChatType.TellOutgoing] = args[2];
+                            this.plugin.Config.PrefixConfigs[XivChatType.TellIncoming] = args[2];
+                        }
+                        else if (selectedKind == "p")
+                        {
+                            this.plugin.Config.PrefixConfigs[XivChatType.Party] = args[2];
+                            this.plugin.Config.PrefixConfigs[XivChatType.CrossParty] = args[2];
+                        }
+                        else
+                        {
+                            var type = XivChatTypeExtensions.GetBySlug(selectedKind);
+                            this.plugin.Config.PrefixConfigs[type] = args[2];
+                        }
+
                     }
 
                     this.plugin.Config.Save();

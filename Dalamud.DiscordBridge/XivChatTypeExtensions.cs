@@ -61,10 +61,17 @@ namespace Dalamud.DiscordBridge
                     }
                 },
                 {
+                    XivChatType.TellOutgoing, new XivChatTypeInfo // Tells need special handling
+                    {
+                        Slug = "tell",
+                        FancyName = "Tell (Outgoing)"
+                    }
+                },
+                {
                     XivChatType.TellIncoming, new XivChatTypeInfo // Tells need special handling, outgoing Tells are TellOutgoing
                     {
                         Slug = "tell",
-                        FancyName = "Tell"
+                        FancyName = "Tell (Incoming)"
                     }
                 },
                 {
@@ -453,8 +460,8 @@ namespace Dalamud.DiscordBridge
 
         public static XivChatTypeInfo GetInfo(this XivChatType type)
         {
-            if (type == XivChatType.TellOutgoing)
-                type = XivChatType.TellIncoming;
+            // if (type == XivChatType.TellOutgoing)
+            //     type = XivChatType.TellIncoming;
 
             if (TypeInfoDict.TryGetValue(type, out var info))
                 return info;
