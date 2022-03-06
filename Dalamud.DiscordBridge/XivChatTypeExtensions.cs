@@ -316,14 +316,21 @@ namespace Dalamud.DiscordBridge
                     }
                 },
                 {
-                    (XivChatType)69, new XivChatTypeInfo
+                    (XivChatType)581, new XivChatTypeInfo
                     {
                         Slug = "fcannounce",
                         FancyName = "Free Company Announcement"
                     }
                 },
                 {
-                    (XivChatType)70, new XivChatTypeInfo
+                    (XivChatType)8773, new XivChatTypeInfo
+                    {
+                        Slug = "fcrank",
+                        FancyName = "Free Company Ranks"
+                    }
+                },
+                {
+                    (XivChatType)8774, new XivChatTypeInfo
                     {
                         Slug = "fclogin",
                         FancyName = "Free Company Login/Logout"
@@ -337,14 +344,7 @@ namespace Dalamud.DiscordBridge
                     }
                 },
                 {
-                    (XivChatType)73, new XivChatTypeInfo
-                    {
-                        Slug = "sign",
-                        FancyName = "sign"
-                    }
-                },
-                {
-                    (XivChatType)74, new XivChatTypeInfo
+                    (XivChatType)2122, new XivChatTypeInfo
                     {
                         Slug = "random",
                         FancyName = "Random Number"
