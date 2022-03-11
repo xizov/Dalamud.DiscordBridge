@@ -478,8 +478,22 @@ namespace Dalamud.DiscordBridge
                     {
                         foreach (var selectedKind in kinds)
                         {
-                            var type = XivChatTypeExtensions.GetBySlug(selectedKind);
-                            this.plugin.Config.CustomSlugsConfigs[type] = chatChannelOverride;
+                            // Special handling for chat types that share a type
+                            if (selectedKind == "tell")
+                            {
+                                this.plugin.Config.CustomSlugsConfigs[XivChatType.TellOutgoing] = chatChannelOverride;
+                                this.plugin.Config.CustomSlugsConfigs[XivChatType.TellIncoming] = chatChannelOverride;
+                            }
+                            else if (selectedKind == "p")
+                            {
+                                this.plugin.Config.CustomSlugsConfigs[XivChatType.Party] = chatChannelOverride;
+                                this.plugin.Config.CustomSlugsConfigs[XivChatType.CrossParty] = chatChannelOverride;
+                            }
+                            else
+                            {
+                                var type = XivChatTypeExtensions.GetBySlug(selectedKind);
+                                this.plugin.Config.CustomSlugsConfigs[type] = chatChannelOverride;
+                            }
                         }
 
                         await SendGenericEmbed(message.Channel,
