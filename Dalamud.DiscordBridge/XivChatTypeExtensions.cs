@@ -466,7 +466,7 @@ namespace Dalamud.DiscordBridge
             if (TypeInfoDict.TryGetValue(type, out var info))
                 return info;
 
-            throw new ArgumentException("No info mapping for chat type.", nameof(type));
+            throw new ArgumentException($"No info mapping for chat type. {nameof(type)} ({(int)type}){type}");
         }
 
         public static string GetSlug(this XivChatType type)

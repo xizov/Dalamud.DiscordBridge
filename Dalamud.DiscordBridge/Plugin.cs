@@ -12,6 +12,7 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 using Lumina.Excel.GeneratedSheets;
 
@@ -44,6 +45,25 @@ namespace Dalamud.DiscordBridge
         {
             this.Config = (Configuration)this.Interface.GetPluginConfig() ?? new Configuration();
             this.Config.Initialize(this.Interface);
+
+            // sanity check - ensure there are no invalid types leftover from past versions.
+            foreach (DiscordChannelConfig config in this.Config.ChannelConfigs.Values)
+            {
+                for (int i = 0; i < config.ChatTypes.Count; i++)
+                {
+                    XivChatType xct = config.ChatTypes[i];
+                    try
+                    {
+                        xct.GetFancyName();
+                    }
+                    catch (ArgumentException)
+                    {
+                        PluginLog.Error($"Removing invalid chat type before it could cause problems ({(int)xct}){xct}.");
+                        config.ChatTypes.RemoveAt(i--);
+                        this.Config.Save();
+                    }
+                }
+            }
 
             
             this.DiscordBridgeProvider = new DiscordBridgeProvider(this.Interface, new DiscordBridgeAPI(this));
