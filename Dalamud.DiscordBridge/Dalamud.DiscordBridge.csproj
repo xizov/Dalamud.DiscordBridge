@@ -10,7 +10,7 @@
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <NoWarn>IDE0003</NoWarn>
 	<NoWarn>CA1416</NoWarn>
-    <AssemblyVersion>1.2.5.0</AssemblyVersion>
+    <AssemblyVersion>1.2.5.1</AssemblyVersion>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 

@@ -350,6 +350,13 @@ namespace Dalamud.DiscordBridge
                         FancyName = "Random Number"
                     }
                 },
+                {
+                    (XivChatType)8761, new XivChatTypeInfo
+                    {
+                        Slug = "partyadd",
+                        FancyName = "Added to Party"
+                    }
+                },
                 // Special handling for GM types
                 {
                     (XivChatType)80, new XivChatTypeInfo
