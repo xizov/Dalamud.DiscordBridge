@@ -10,7 +10,7 @@
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <NoWarn>IDE0003</NoWarn>
 	<NoWarn>CA1416</NoWarn>
-    <AssemblyVersion>1.2.5.1</AssemblyVersion>
+    <AssemblyVersion>1.2.6.0</AssemblyVersion>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
@@ -79,11 +79,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-	
-	<Target Name="CopyToDevPlugins" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
-		<Exec Command="if not exist $(AppData)\XIVLauncher\devPlugins\$(TargetName) (mkdir $(AppData)\XIVLauncher\devPlugins\$(TargetName))" />
-		<Exec Command="copy $(TargetDir)*.dll $(AppData)\XIVLauncher\devPlugins\$(TargetName)" />
-		<Exec Command="copy $(TargetDir)*.pdb $(AppData)\XIVLauncher\devPlugins\$(TargetName)" />
-	</Target>
-
 </Project>

@@ -301,6 +301,15 @@ namespace Dalamud.DiscordBridge
                         FancyName = "Alarm"
                     }
                 },
+                /* This is no longer needed. It's part of SystemMessage.
+                {
+                    (XivChatType)57, new XivChatTypeInfo
+                    {
+                        Slug = "partyadd",
+                        FancyName = "Added to Party"
+                    }
+                },
+                */
                 {
                     (XivChatType)61, new XivChatTypeInfo
                     {
@@ -316,12 +325,13 @@ namespace Dalamud.DiscordBridge
                     }
                 },
                 {
-                    (XivChatType)581, new XivChatTypeInfo
+                    (XivChatType)69, new XivChatTypeInfo
                     {
                         Slug = "fcannounce",
                         FancyName = "Free Company Announcement"
                     }
                 },
+                /* no longer needed. This is part of fcannounce when unmasked
                 {
                     (XivChatType)8773, new XivChatTypeInfo
                     {
@@ -329,8 +339,9 @@ namespace Dalamud.DiscordBridge
                         FancyName = "Free Company Ranks"
                     }
                 },
+                */
                 {
-                    (XivChatType)8774, new XivChatTypeInfo
+                    (XivChatType)70, new XivChatTypeInfo
                     {
                         Slug = "fclogin",
                         FancyName = "Free Company Login/Logout"
@@ -344,17 +355,17 @@ namespace Dalamud.DiscordBridge
                     }
                 },
                 {
-                    (XivChatType)2122, new XivChatTypeInfo
+                    (XivChatType)73, new XivChatTypeInfo
                     {
-                        Slug = "random",
-                        FancyName = "Random Number"
+                        Slug = "sign",
+                        FancyName = "Sign"
                     }
                 },
                 {
-                    (XivChatType)8761, new XivChatTypeInfo
+                    (XivChatType)74, new XivChatTypeInfo
                     {
-                        Slug = "partyadd",
-                        FancyName = "Added to Party"
+                        Slug = "random",
+                        FancyName = "Random Number"
                     }
                 },
                 // Special handling for GM types
@@ -470,7 +481,7 @@ namespace Dalamud.DiscordBridge
             // if (type == XivChatType.TellOutgoing)
             //     type = XivChatType.TellIncoming;
 
-            if (TypeInfoDict.TryGetValue(type, out var info))
+            if (TypeInfoDict.TryGetValue((XivChatType)((int)type & 0x7F), out var info))
                 return info;
 
             throw new ArgumentException($"No info mapping for chat type. {nameof(type)} ({(int)type}){type}");

@@ -52,9 +52,14 @@ namespace Dalamud.DiscordBridge
                 for (int i = 0; i < config.ChatTypes.Count; i++)
                 {
                     XivChatType xct = config.ChatTypes[i];
+                    if ((int)xct > 127)
+                    {
+                        config.ChatTypes[i] = (XivChatType)((int)xct & 0x7F);
+                        this.Config.Save();
+                    }
                     try
                     {
-                        xct.GetFancyName();
+                        xct.GetInfo();
                     }
                     catch (ArgumentException)
                     {
@@ -116,7 +121,7 @@ namespace Dalamud.DiscordBridge
             {
                 this.Discord.MessageQueue.Enqueue(new QueuedChatEvent
                 {
-                    ChatType = type,
+                    ChatType = (XivChatType)((int)type & 0x7F), // strip off the sender mask subtype
                     Message = message,
                     Sender = sender
                 });
