@@ -1028,6 +1028,7 @@ namespace Dalamud.DiscordBridge
 
             message = this.specialChars.TransformToUnicode(message);
 
+            bool characterSearchFailed = false;
             
             try
             {
@@ -1070,11 +1071,20 @@ namespace Dalamud.DiscordBridge
                             else
                             {
                                 PluginLog.Verbose($"Searching lodestone for {playerCacheName}");
-                                lschar = await lodestoneClient.SearchCharacter(new CharacterSearchQuery()
+
+                                var searchPage = await lodestoneClient.SearchCharacter(new CharacterSearchQuery
                                 {
                                     CharacterName = senderName,
                                     World = senderWorld,
-                                }).Result.Results.FirstOrDefault(result => result.Name == senderName).GetCharacter();
+                                });
+
+                                var matchingEntry = searchPage.Results.FirstOrDefault(result => result.Name == senderName);
+                                if (matchingEntry == null)
+                                {
+                                    break;
+                                }
+                                
+                                lschar = await matchingEntry.GetCharacter();
 
                                 CachedResponses.TryAdd(playerCacheName, lschar);
                                 PluginLog.Verbose($"Adding cached data for {lschar.Name} {lschar.Avatar}");
@@ -1098,7 +1108,8 @@ namespace Dalamud.DiscordBridge
                 {
                     PluginLog.Error(ex, $"Cannot fetch XIVAPI character search for {senderName} on {senderWorld}");
                 }
-                    
+                
+                characterSearchFailed = true;
             }
 
             var displayName = senderName + (string.IsNullOrEmpty(senderWorld) || string.IsNullOrEmpty(senderName)
@@ -1118,13 +1129,15 @@ namespace Dalamud.DiscordBridge
                 {
                     PluginLog.Error("Could not find channel {0} for {1}", channelConfig.Key, chatType);
 
-                    var channelConfigs = this.plugin.Config.ChannelConfigs;
-                    channelConfigs.Remove(channelConfig.Key);
-                    this.plugin.Config.ChannelConfigs = channelConfigs;
+                    if (!characterSearchFailed)
+                    {
+                        var channelConfigs = this.plugin.Config.ChannelConfigs;
+                        channelConfigs.Remove(channelConfig.Key);
+                        this.plugin.Config.ChannelConfigs = channelConfigs;
 
-
-                    PluginLog.Log("Removing channel {0}'s config because it no longer exists or cannot be accessed.", channelConfig.Key);
-                    this.plugin.Config.Save();
+                        PluginLog.Log("Removing channel {0}'s config because it no longer exists or cannot be accessed.", channelConfig.Key);
+                        this.plugin.Config.Save();
+                    }
                     
                     continue;
                 }
