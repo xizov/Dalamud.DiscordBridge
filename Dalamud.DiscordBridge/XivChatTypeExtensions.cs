@@ -368,6 +368,13 @@ namespace Dalamud.DiscordBridge
                         FancyName = "Random Number"
                     }
                 },
+                {
+                    (XivChatType)75, new XivChatTypeInfo
+                    {
+                        Slug = "nnn",
+                        FancyName = "Novice Network Notifications"
+                    }
+                },
                 // Special handling for GM types
                 {
                     (XivChatType)80, new XivChatTypeInfo
