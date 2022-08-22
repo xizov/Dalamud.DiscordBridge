@@ -254,11 +254,27 @@ namespace Dalamud.DiscordBridge
                             {
                                 PluginLog.Error(ex, "Could not deduce player name.");
                             }
-                            
+
+                            string messagetext = "";
+                            chatEvent.Message.Payloads.ForEach(x =>
+                            {
+                                if (x.Type == PayloadType.EmphasisItalic)
+                                {
+                                    messagetext += "_";
+                                }
+                                else if (x.Type == PayloadType.UIGlow)
+                                {
+                                    messagetext += "**";
+                                }
+                                else if (x is ITextProvider)
+                                {
+                                    messagetext += ((ITextProvider)x).Text;
+                                }
+                            });
 
                             try
                             {
-                                await this.plugin.Discord.SendChatEvent(chatEvent.Message.TextValue, senderName.TextValue, senderWorld, chatEvent.ChatType, chatEvent.AvatarUrl);
+                                await this.plugin.Discord.SendChatEvent(messagetext, senderName.TextValue, senderWorld, chatEvent.ChatType, chatEvent.AvatarUrl);
                             }
                             catch (Exception e)
                             {

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Dalamud.Configuration;
 using Dalamud.DiscordBridge.Model;
 using Dalamud.Game.Text;
@@ -18,6 +18,9 @@ namespace Dalamud.DiscordBridge
         public string DiscordToken { get; set; } = string.Empty;
         public string DiscordOwnerName { get; set; } = string.Empty;
         public string DiscordBotPrefix { get; set; } = "xl!";
+
+        public string DefaultAvatarURL = Constant.LogoLink;
+        public Dictionary<XivChatType, string> ChatTypeAvatarURL { get; set; } = new Dictionary<XivChatType, string>();
 
         public Dictionary<ulong, DiscordChannelConfig> ChannelConfigs { get; set; } = new Dictionary<ulong, DiscordChannelConfig>();
         public Dictionary<XivChatType, string> PrefixConfigs { get; set; } = new Dictionary<XivChatType, string>();

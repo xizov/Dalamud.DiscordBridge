@@ -653,6 +653,176 @@ namespace Dalamud.DiscordBridge
                     return;
                 }
 
+                if (args[0] == this.plugin.Config.DiscordBotPrefix + "setavatar")
+                {
+                    // Are there parameters?
+                    if (args.Length != 3)
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"You need to specify one or more chat kinds and a custom avatar url.\nCheck the ``{this.plugin.Config.DiscordBotPrefix}help`` command for more information.",
+                            "Error", EmbedColorError);
+
+                        return;
+                    }
+
+                    var kinds = args[1].Split(',').Select(x => x.ToLower());
+                    var avatarURL = args[2].Replace("<", "").Replace(">", "").Trim();
+
+
+                    if (args[1] == "default" && avatarURL == "none")
+                    {
+                        this.plugin.Config.DefaultAvatarURL = Constant.LogoLink;
+
+                        await SendGenericEmbed(message.Channel,
+                        $"OK! The default/fallback avatar has been reset to default.",
+                        "Custom fallback avatar reset", EmbedColorFine);
+
+                        this.plugin.Config.Save();
+                        return;
+                    }
+                    if (args[1] == "default")
+                    {
+                        this.plugin.Config.DefaultAvatarURL = avatarURL;
+
+                        await SendGenericEmbed(message.Channel,
+                        $"OK! The default/fallback avatar has been set to ``{avatarURL}``",
+                        "Custom fallback avatar set", EmbedColorFine);
+
+                        this.plugin.Config.Save();
+                        return;
+                    }
+                    
+
+                    // Is there any chat type that's not recognized?
+                    if (kinds.Any(x =>
+                        XivChatTypeExtensions.TypeInfoDict.All(y => y.Value.Slug != x) && x != "any"))
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"One or more of the chat kinds you specified could not be found.\nCheck the ``{this.plugin.Config.DiscordBotPrefix}help`` command for more information.",
+                            "Error", EmbedColorError);
+
+                        return;
+                    }
+
+                    if (avatarURL == "none")
+                    {
+                        foreach (var selectedKind in kinds)
+                        {
+                            var type = XivChatTypeExtensions.GetBySlug(selectedKind);
+                            this.plugin.Config.ChatTypeAvatarURL[type] = Constant.LogoLink;
+                        }
+
+                        await SendGenericEmbed(message.Channel,
+                        $"OK! The following custom chat type names have been set:\n\n```\n{this.plugin.Config.CustomSlugsConfigs.Select(x => $"{x.Key.GetFancyName()} - {x.Value}").Aggregate((x, y) => x + "\n" + y)}```",
+                        "Custom avatar set", EmbedColorFine);
+                    }
+                    else
+                    {
+                        foreach (var selectedKind in kinds)
+                        {
+                            // Special handling for chat types that share a type
+                            if (selectedKind == "tell")
+                            {
+                                this.plugin.Config.ChatTypeAvatarURL[XivChatType.TellOutgoing] = avatarURL;
+                                this.plugin.Config.ChatTypeAvatarURL[XivChatType.TellIncoming] = avatarURL;
+                            }
+                            else if (selectedKind == "p")
+                            {
+                                this.plugin.Config.ChatTypeAvatarURL[XivChatType.Party] = avatarURL;
+                                this.plugin.Config.ChatTypeAvatarURL[XivChatType.CrossParty] = avatarURL;
+                            }
+                            else
+                            {
+                                var type = XivChatTypeExtensions.GetBySlug(selectedKind);
+                                this.plugin.Config.ChatTypeAvatarURL[type] = avatarURL;
+                            }
+                        }
+
+                        await SendGenericEmbed(message.Channel,
+                        $"OK! The following custom chat type names have been set:\n\n```\n{this.plugin.Config.ChatTypeAvatarURL.Select(x => $"{x.Key.GetFancyName()} - {x.Value}").Aggregate((x, y) => x + "\n" + y)}```",
+                        "Custom chat type set", EmbedColorFine);
+                    }
+
+                    this.plugin.Config.Save();
+
+                    return;
+                }
+
+                if (args[0] == this.plugin.Config.DiscordBotPrefix + "unsetavatar")
+                {
+                    if (args.Length != 2)
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"You have entered this command incorrectly. Please try again.",
+                            "Error", EmbedColorError);
+                    }
+
+                    if (args[1] == "default")
+                    {
+                        this.plugin.Config.DefaultAvatarURL = Constant.LogoLink;
+
+                        await SendGenericEmbed(message.Channel,
+                        $"OK! The default/fallback avatar has been reset.",
+                        "Custom fallback avatar reset", EmbedColorFine);
+
+                        this.plugin.Config.Save();
+                        return;
+                    }
+
+                    var kinds = args[1].Split(',').Select(x => x.ToLower());
+
+                    // PluginLog.Information($"Looking for `{chatTypeSlug}`");
+
+                    // Is there any chat type that's not recognized?
+                    if (kinds.Any(x =>
+                        XivChatTypeExtensions.TypeInfoDict.All(y => y.Value.Slug != x) && x != "any"))
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"One or more of the chat kinds you specified could not be found.\nCheck the ``{this.plugin.Config.DiscordBotPrefix}help`` command for more information.",
+                            "Error", EmbedColorError);
+
+                        return;
+                    }
+
+                    foreach (var selectedKind in kinds)
+                    {
+                        // Special handling for chat types that share a type
+                        if (selectedKind == "tell")
+                        {
+                            this.plugin.Config.ChatTypeAvatarURL.Remove(XivChatType.TellOutgoing);
+                            this.plugin.Config.ChatTypeAvatarURL.Remove(XivChatType.TellIncoming);
+                        }
+                        else if (selectedKind == "p")
+                        {
+                            this.plugin.Config.ChatTypeAvatarURL.Remove(XivChatType.Party);
+                            this.plugin.Config.ChatTypeAvatarURL.Remove(XivChatType.CrossParty);
+                        }
+                        else
+                        {
+                            var type = XivChatTypeExtensions.GetBySlug(selectedKind);
+                            this.plugin.Config.ChatTypeAvatarURL.Remove(type);
+                        }
+                    }
+
+                    if (this.plugin.Config.ChatTypeAvatarURL.Count == 0)
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"OK! There are no custom avatar overrides set.",
+                            "Custom chat type unset", EmbedColorFine);
+                    }
+                    else
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"OK! The following custom chat type names are set:\n\n```\n{this.plugin.Config.ChatTypeAvatarURL.Select(x => $"{x.Key.GetFancyName()} - {x.Value}").Aggregate((x, y) => x + "\n" + y)}```",
+                            "Custom chat type unset", EmbedColorFine);
+                    }
+                    
+
+                    plugin.Config.Save();
+                    return;
+                    
+                }
+
                 if (args[0] == this.plugin.Config.DiscordBotPrefix + "help")
                 {
                     PluginLog.Verbose("Help time");
@@ -684,6 +854,13 @@ namespace Dalamud.DiscordBridge
                             + $"Format: ``{this.plugin.Config.DiscordBotPrefix}unsetprefix <kind>``")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}unsetchattypename", "Remove custom name for a chat kind. \n"
                             + $"Format: ``{this.plugin.Config.DiscordBotPrefix}unsetchattypename <kind>``")
+                        .AddField($"{this.plugin.Config.DiscordBotPrefix}setavatar <kind> <url>", "Set custom fallback avator for a chat kind. "
+                            + "Use ``default`` as the fallback for any unconfigured overrides.\n"
+                            + "__NOTE__: Upload the icon to Discord first if you don't have a URL already.\n"
+                            + $"Format: ``{this.plugin.Config.DiscordBotPrefix}setavatar <kind> <url>``")
+                        .AddField($"{this.plugin.Config.DiscordBotPrefix}unsetavatar <kind>", "Unset custom fallback avator for a chat kind. "
+                            + "Use ``default`` to reset the fallback for any unconfigured overrides.\n"
+                            + $"Format: ``{this.plugin.Config.DiscordBotPrefix}unsetavatar <kind>``")
                         .AddField("Need more help?",
                             $"You can [read the full step-by-step guide]({Constant.HelpLink}) or [join our Discord server]({Constant.DiscordJoinLink}) to ask for help.")
                         .WithFooter(footer =>
@@ -835,7 +1012,12 @@ namespace Dalamud.DiscordBridge
             // default avatar url to logo link if empty
             if (string.IsNullOrEmpty(avatarUrl))
             {
-                avatarUrl = Constant.LogoLink;
+                
+                if (!plugin.Config.ChatTypeAvatarURL.TryGetValue(chatType, out avatarUrl))
+                {
+                    avatarUrl = plugin.Config.DefaultAvatarURL;
+                }
+                
             }
 
             var applicableChannels =
