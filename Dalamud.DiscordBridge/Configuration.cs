@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Dalamud.Configuration;
 using Dalamud.DiscordBridge.Model;
 using Dalamud.Game.Text;
