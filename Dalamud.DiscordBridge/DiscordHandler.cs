@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
@@ -1070,7 +1070,7 @@ namespace Dalamud.DiscordBridge
                         }
                         if (doSearch)
                         {
-                            var playerCacheName = $"{senderName}@{senderWorld}";
+                            var playerCacheName = $"{senderName}＠{senderWorld}";
                             PluginLog.Verbose($"Searching for {playerCacheName}");
                             
                             if (CachedResponses.TryGetValue(playerCacheName, out LodestoneCharacter lschar))
@@ -1124,7 +1124,7 @@ namespace Dalamud.DiscordBridge
 
             var displayName = senderName + (string.IsNullOrEmpty(senderWorld) || string.IsNullOrEmpty(senderName)
                 ? ""
-                : $"@{senderWorld}");
+                : $"＠{senderWorld}");
 
             this.plugin.Config.PrefixConfigs.TryGetValue(chatType, out var prefix);
 

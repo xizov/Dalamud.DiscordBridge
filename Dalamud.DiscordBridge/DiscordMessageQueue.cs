@@ -226,7 +226,7 @@ namespace Dalamud.DiscordBridge
                                         if (senderWorld.Equals(string.Empty))
                                             senderWorld = this.plugin.State.LocalPlayer.HomeWorld.GameData.Name;
 
-                                        // PluginLog.Information($"FRANZDEBUGGINGNULL Playerlink is null: {senderName}@{senderWorld}");
+                                        // PluginLog.Information($"FRANZDEBUGGINGNULL Playerlink is null: {senderName}＠{senderWorld}");
                                     }
                                     else
                                     {
@@ -236,7 +236,7 @@ namespace Dalamud.DiscordBridge
                                         senderWorld = chatEvent.ChatType == XivChatType.TellOutgoing
                                             ? this.plugin.State.LocalPlayer.HomeWorld.GameData.Name
                                             : playerLink.World.Name;
-                                        // PluginLog.Information($"FRANZDEBUGGING Playerlink was not null: {senderName}@{senderWorld}");
+                                        // PluginLog.Information($"FRANZDEBUGGING Playerlink was not null: {senderName}＠{senderWorld}");
                                     }
                                 }
                                 else
