@@ -107,6 +107,7 @@ namespace Dalamud.DiscordBridge
             {
                 WebSocketProvider = WS4NetProvider.Instance,
                 MessageCacheSize = 20, // hold onto the last 20 messages per channel in cache for duplicate checks
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMessages | GatewayIntents.GuildWebhooks | GatewayIntents.MessageContent,
             });
             this.socketClient.Ready += SocketClientOnReady;
             this.socketClient.MessageReceived += SocketClientOnMessageReceived;
