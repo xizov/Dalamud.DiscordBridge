@@ -876,7 +876,7 @@ namespace Dalamud.DiscordBridge
                         .WithFooter(footer =>
                         {
                             footer
-                                .WithText("Dalamud Discord Bridge")
+                                .WithText("Dalamud Chat Bridge")
                                 .WithIconUrl(Constant.LogoLink);
                         })
                         .WithThumbnailUrl(Constant.LogoLink);
@@ -906,7 +906,7 @@ namespace Dalamud.DiscordBridge
                 .WithColor(new Color(color))
                 .WithFooter(footer => {
                     footer
-                        .WithText("Dalamud Discord Bridge")
+                        .WithText("Dalamud Chat Bridge")
                         .WithIconUrl(Constant.LogoLink);
                 })
                 .WithThumbnailUrl(Constant.LogoLink);
@@ -926,7 +926,7 @@ namespace Dalamud.DiscordBridge
                 .WithColor(new Color(color))
                 .WithFooter(footer => {
                     footer
-                        .WithText("Dalamud Discord Bridge")
+                        .WithText("Dalamud Chat Bridge")
                         .WithIconUrl(Constant.LogoLink);
                 })
                 .WithThumbnailUrl(iconurl);
@@ -1215,7 +1215,7 @@ namespace Dalamud.DiscordBridge
                 // add handling for webhook vs embed here
                 if (socketChannel is SocketDMChannel)
                 {
-                    embedBuilder.WithAuthor(new EmbedAuthorBuilder {Name = "Dalamud Discord Bridge", IconUrl = Constant.LogoLink});
+                    embedBuilder.WithAuthor(new EmbedAuthorBuilder {Name = "Dalamud Chat Bridge", IconUrl = Constant.LogoLink});
                     var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
                     await DMChannel.SendMessageAsync($"{prefix}", embed: embedBuilder.Build());
                 }
@@ -1223,7 +1223,7 @@ namespace Dalamud.DiscordBridge
                 {
                     var webhookClient = await GetOrCreateWebhookClient(socketChannel);
                     await webhookClient.SendMessageAsync($"{prefix}", embeds: new[] { embedBuilder.Build() },
-                    username: "Dalamud Discord Bridge", avatarUrl: Constant.LogoLink);
+                    username: "Dalamud Chat Bridge", avatarUrl: Constant.LogoLink);
                 }
 
                 
