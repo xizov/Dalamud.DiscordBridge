@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
@@ -1023,8 +1023,16 @@ namespace Dalamud.DiscordBridge
                 else
                 {
                     var webhookClient = await GetOrCreateWebhookClient(socketChannel);
-                    await webhookClient.SendMessageAsync($"{prefix} {message}",
+                    if (webhookClient != null)
+                    {
+                        await webhookClient.SendMessageAsync($"{prefix} {message}",
                         username: $"Retainer sold {name}", avatarUrl: iconurl);
+                    }
+                    else
+                    {
+                        await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\nUnable to create WebHook\n\n{message}", $"Retainer sold {name}", iconurl, EmbedColorError);
+                    }
+                    
                 }
                     
             }
@@ -1201,6 +1209,18 @@ namespace Dalamud.DiscordBridge
                         messageContent, username: displayName, avatarUrl: avatarUrl,
                         allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)
                     );
+
+                    if (webhookClient != null)
+                    {
+                        await webhookClient.SendMessageAsync(
+                            messageContent, username: displayName, avatarUrl: avatarUrl,
+                            allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)
+                        );
+                    }
+                    else
+                    {
+                        await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\nUnable to create WebHook\n\n{messageContent}", $"displayName", avatarUrl, EmbedColorError);
+                    }
                 }
             }
         }
@@ -1249,8 +1269,18 @@ namespace Dalamud.DiscordBridge
                 else
                 {
                     var webhookClient = await GetOrCreateWebhookClient(socketChannel);
-                    await webhookClient.SendMessageAsync($"{prefix}", embeds: new[] { embedBuilder.Build() },
+                    
+
+                    if (webhookClient != null)
+                    {
+                        await webhookClient.SendMessageAsync($"{prefix}", embeds: new[] { embedBuilder.Build() },
                     username: "Dalamud Chat Bridge", avatarUrl: Constant.LogoLink);
+                    }
+                    else
+                    {
+                        embedBuilder.WithAuthor(new EmbedAuthorBuilder { Name = "Dalamud Chat Bridge", IconUrl = Constant.LogoLink });
+                        await ((ISocketMessageChannel)socketChannel).SendMessageAsync($"{prefix}", embed: embedBuilder.Build());
+                    }
                 }
 
                 
@@ -1274,7 +1304,18 @@ namespace Dalamud.DiscordBridge
             if (channelConfig.WebhookId != 0)
                 hook = await textChannel.GetWebhookAsync(channelConfig.WebhookId) ?? await textChannel.CreateWebhookAsync("FFXIV Bridge Worker");
             else
-                hook = await textChannel.CreateWebhookAsync("FFXIV Bridge Worker");
+            {
+                try
+                {
+                    hook = await textChannel.CreateWebhookAsync("FFXIV Bridge Worker");
+                }
+                catch (Discord.Net.HttpException e)
+                {
+                    PluginLog.Error("Unable to get or create webhook", e.StackTrace);
+                    return null;
+                }
+            }
+                
             
             this.plugin.Config.ChannelConfigs[channel.Id].WebhookId = hook.Id;
             this.plugin.Config.Save();
