@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
@@ -568,7 +568,7 @@ namespace Dalamud.DiscordBridge
                     await EnsureOwner(message.Author, message.Channel))
                 {
                     // Are there parameters?
-                    if (args.Length == 1)
+                    if (args.Length != 2)
                     {
                         await SendGenericEmbed(message.Channel,
                             $"You need to specify a number in milliseconds to use.\nCheck the ``{this.plugin.Config.DiscordBotPrefix}help`` command for more information.",
@@ -577,17 +577,43 @@ namespace Dalamud.DiscordBridge
                         return;
                     }
 
-                    var kinds = args[1].Split(',').Select(x => x.ToLower());
-
                     // Make sure that it's a number (or assume it is)
-                    int newDelay = int.Parse(args[1]);
+                    int newDelay;
+                    if (!int.TryParse(args[1], out newDelay))
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"You need to specify a positive number in milliseconds to use, or 0 to turn the feature off.\nCheck the ``{this.plugin.Config.DiscordBotPrefix}help`` command for more information.",
+                            "Error", EmbedColorError);
+
+                        return;
+                    }
+                    
+
+                    if (args[1].ToLower() == "none")
+                        newDelay = 0;
+
+                    if (newDelay < 0)
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"You need to specify a positive number in milliseconds to use, or 0 to turn the feature off.\nCheck the ``{this.plugin.Config.DiscordBotPrefix}help`` command for more information.",
+                            "Error", EmbedColorError);
+
+                        return;
+                    }
 
                     this.plugin.Config.DuplicateCheckMS = newDelay;
                     this.plugin.Config.Save();
 
-                    await SendGenericEmbed(message.Channel,
-                        $"OK! Any messages with the same content within the last **{newDelay}** milliseconds will be skipped, preventing duplicate posts.",
-                        "Duplicate Message Check", EmbedColorFine);
+                    if (newDelay == 0)
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"OK! The duplicate chat removal feature has been disabled.", "Duplicate Message Check", EmbedColorFine);
+                    }
+                    else
+                    {
+                        await SendGenericEmbed(message.Channel,
+                            $"OK! Any messages with the same content within the last **{newDelay}** milliseconds will be skipped, preventing duplicate posts.", "Duplicate Message Check", EmbedColorFine);
+                    }
 
                     return;
                 }
