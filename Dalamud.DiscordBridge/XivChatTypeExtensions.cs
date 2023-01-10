@@ -318,6 +318,13 @@ namespace Dalamud.DiscordBridge
                     }
                 },
                 {
+                    (XivChatType)66, new XivChatTypeInfo
+                    {
+                        Slug = "synthmsg",
+                        FancyName = "Synthesis Message"
+                    }
+                },
+                {
                     (XivChatType)68, new XivChatTypeInfo
                     {
                         Slug = "npcannounce",
@@ -331,15 +338,6 @@ namespace Dalamud.DiscordBridge
                         FancyName = "Free Company Announcement"
                     }
                 },
-                /* no longer needed. This is part of fcannounce when unmasked
-                {
-                    (XivChatType)8773, new XivChatTypeInfo
-                    {
-                        Slug = "fcrank",
-                        FancyName = "Free Company Ranks"
-                    }
-                },
-                */
                 {
                     (XivChatType)70, new XivChatTypeInfo
                     {
