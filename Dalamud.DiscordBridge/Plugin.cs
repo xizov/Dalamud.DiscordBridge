@@ -11,6 +11,7 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
@@ -45,6 +46,8 @@ namespace Dalamud.DiscordBridge
         {
             this.Config = (Configuration)this.Interface.GetPluginConfig() ?? new Configuration();
             this.Config.Initialize(this.Interface);
+
+            this.Interface.UiBuilder.OpenConfigUi += this.OpenConfigUi;
 
             // sanity check - ensure there are no invalid types leftover from past versions.
             foreach (DiscordChannelConfig config in this.Config.ChannelConfigs.Values)
@@ -129,6 +132,11 @@ namespace Dalamud.DiscordBridge
             
         }
 
+        private void OpenConfigUi()
+        {
+            this.ui.Show();
+        }
+
         [Command("/pdiscord")]
         [HelpMessage("Show settings for the discord bridge plugin.")]
         public void OpenSettingsCommand(string command, string args)
@@ -196,6 +204,8 @@ namespace Dalamud.DiscordBridge
             this.Discord.Dispose();
 
             this.commandManager.Dispose();
+
+            this.Interface.UiBuilder.OpenConfigUi -= this.OpenConfigUi;
 
             this.Interface.SavePluginConfig(this.Config);
 
