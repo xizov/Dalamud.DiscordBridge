@@ -1110,12 +1110,12 @@ namespace Dalamud.DiscordBridge
                             
                             if (CachedResponses.TryGetValue(playerCacheName, out LodestoneCharacter lschar))
                             {
-                                PluginLog.Verbose($"Retrived cached data for {lschar.Name} {lschar.Avatar.ToString()}");
+                                PluginLog.Debug($"Retrived cached data for {lschar.Name} {lschar.Avatar.ToString()}");
                                 avatarUrl = lschar.Avatar.ToString();
                             }
                             else
                             {
-                                PluginLog.Verbose($"Searching lodestone for {playerCacheName}");
+                                PluginLog.Debug($"Searching lodestone for {playerCacheName}");
 
                                 var searchPage = await lodestoneClient.SearchCharacter(new CharacterSearchQuery
                                 {
@@ -1132,7 +1132,7 @@ namespace Dalamud.DiscordBridge
                                 lschar = await matchingEntry.GetCharacter();
 
                                 CachedResponses.TryAdd(playerCacheName, lschar);
-                                PluginLog.Verbose($"Adding cached data for {lschar.Name} {lschar.Avatar}");
+                                PluginLog.Debug($"Adding cached data for {lschar.Name} {lschar.Avatar}");
                                 avatarUrl = lschar.Avatar.ToString();
                             }
 
