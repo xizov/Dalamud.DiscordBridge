@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
@@ -1206,11 +1206,6 @@ namespace Dalamud.DiscordBridge
                     {
                         continue;
                     }
-                    
-                    await webhookClient.SendMessageAsync(
-                        messageContent, username: displayName, avatarUrl: avatarUrl,
-                        allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)
-                    );
 
                     if (webhookClient != null)
                     {
