@@ -1015,10 +1015,19 @@ namespace Dalamud.DiscordBridge
                 }
 
                 // add handling for webhook vs embed here
+                IGuildChannel guildChannel = (IGuildChannel)socketChannel;
+                IGuildUser guildUser = await guildChannel.Guild.GetUserAsync(this.socketClient.CurrentUser.Id);
+                bool hasManageWebHooks = guildUser.GetPermissions(guildChannel).Has(ChannelPermission.ManageWebhooks);
+
                 if (socketChannel is SocketDMChannel)
                 {
                     var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
                     await SendPrettyEmbed((ISocketMessageChannel)DMChannel, message, $"Retainer sold {name}", iconurl, EmbedColorFine);
+                }
+                else if (!hasManageWebHooks)
+                {
+                    PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - No permission\n");
+                    await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\n\nMissing ManageWebHooks permission.\n\n{message}", $"Retainer sold {name}", iconurl, EmbedColorError);
                 }
                 else
                 {
@@ -1192,11 +1201,20 @@ namespace Dalamud.DiscordBridge
 
 
                 // add handling for webhook vs embed here
+                IGuildChannel guildChannel = (IGuildChannel)socketChannel;
+                IGuildUser guildUser = await guildChannel.Guild.GetUserAsync(this.socketClient.CurrentUser.Id);
+                bool hasManageWebHooks = guildUser.GetPermissions(guildChannel).Has(ChannelPermission.ManageWebhooks);
+
                 if (socketChannel is SocketDMChannel)
                 {
                     var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
                     await SendPrettyEmbed((ISocketMessageChannel)DMChannel, messageContent, displayName, avatarUrl, EmbedColorFine);
                     PluginLog.Debug("SendChatEvent sent to DMs.");
+                }
+                else if (!hasManageWebHooks)
+                {
+                    PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - No Permission\n");
+                    await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\n\nMissing ManageWebHooks permission.\n\n{messageContent}", $"{displayName}", avatarUrl, EmbedColorError);
                 }
                 else
                 {
@@ -1217,8 +1235,8 @@ namespace Dalamud.DiscordBridge
                     }
                     else
                     {
-                        PluginLog.Debug("FALLBACKMODE - Unable to create WebHook\n");
-                        await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\nUnable to create WebHook\n\n{messageContent}", $"displayName", avatarUrl, EmbedColorError);
+                        PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - Unknown failure\n");
+                        await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\n\nUnable to create WebHook\n\n{messageContent}", $"{displayName}", avatarUrl, EmbedColorError);
                     }
                 }
             }
@@ -1259,11 +1277,23 @@ namespace Dalamud.DiscordBridge
                 var prefix = this.plugin.Config.CFPrefixConfig ?? "";
 
                 // add handling for webhook vs embed here
+                IGuildChannel guildChannel = (IGuildChannel)socketChannel;
+                IGuildUser guildUser = await guildChannel.Guild.GetUserAsync(this.socketClient.CurrentUser.Id);
+                bool hasManageWebHooks = guildUser.GetPermissions(guildChannel).Has(ChannelPermission.ManageWebhooks);
+
                 if (socketChannel is SocketDMChannel)
                 {
                     embedBuilder.WithAuthor(new EmbedAuthorBuilder {Name = "Dalamud Chat Bridge", IconUrl = Constant.LogoLink});
                     var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
                     await DMChannel.SendMessageAsync($"{prefix}", embed: embedBuilder.Build());
+                }
+                else if (!hasManageWebHooks)
+                {
+                    PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - No Permission\n");
+                    embedBuilder
+                        .WithAuthor(new EmbedAuthorBuilder { Name = "Dalamud Chat Bridge", IconUrl = Constant.LogoLink })
+                        .WithDescription("FALLBACKMODE - Unable to create WebHook - Missing ManageWebHook permission.");
+                    await ((ISocketMessageChannel)socketChannel).SendMessageAsync($"{prefix}", embed: embedBuilder.Build());
                 }
                 else
                 {
@@ -1277,7 +1307,10 @@ namespace Dalamud.DiscordBridge
                     }
                     else
                     {
-                        embedBuilder.WithAuthor(new EmbedAuthorBuilder { Name = "Dalamud Chat Bridge", IconUrl = Constant.LogoLink });
+                        PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - Unknown error\n");
+                        embedBuilder
+                            .WithAuthor(new EmbedAuthorBuilder { Name = "Dalamud Chat Bridge", IconUrl = Constant.LogoLink })
+                            .WithDescription("FALLBACKMODE - Unable to create WebHook - Unknown failure");
                         await ((ISocketMessageChannel)socketChannel).SendMessageAsync($"{prefix}", embed: embedBuilder.Build());
                     }
                 }
