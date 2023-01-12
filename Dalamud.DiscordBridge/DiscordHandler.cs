@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
@@ -140,7 +140,7 @@ namespace Dalamud.DiscordBridge
 
             lodestoneClient = await LodestoneClient.GetClientAsync();
 
-            PluginLog.Verbose("DiscordHandler START!!");
+            PluginLog.Debug("DiscordHandler START!!");
         }
 
         private Task SocketClientOnReady()
@@ -1030,6 +1030,7 @@ namespace Dalamud.DiscordBridge
                     }
                     else
                     {
+                        PluginLog.Debug("FALLBACKMODE - Unable to create WebHook\n");
                         await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\nUnable to create WebHook\n\n{message}", $"Retainer sold {name}", iconurl, EmbedColorError);
                     }
                     
@@ -1195,6 +1196,7 @@ namespace Dalamud.DiscordBridge
                 {
                     var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
                     await SendPrettyEmbed((ISocketMessageChannel)DMChannel, messageContent, displayName, avatarUrl, EmbedColorFine);
+                    PluginLog.Debug("SendChatEvent sent to DMs.");
                 }
                 else
                 {
@@ -1216,9 +1218,11 @@ namespace Dalamud.DiscordBridge
                             messageContent, username: displayName, avatarUrl: avatarUrl,
                             allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)
                         );
+                        PluginLog.Debug("SendChatEvent sent to WebHook.");
                     }
                     else
                     {
+                        PluginLog.Debug("FALLBACKMODE - Unable to create WebHook\n");
                         await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\nUnable to create WebHook\n\n{messageContent}", $"displayName", avatarUrl, EmbedColorError);
                     }
                 }
