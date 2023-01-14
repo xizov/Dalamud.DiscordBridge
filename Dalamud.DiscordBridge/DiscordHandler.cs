@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dalamud.DiscordBridge.Model;
 using Dalamud.DiscordBridge.XivApi;
+using Dalamud.Game.ClientState;
 using Dalamud.Game.Text;
 using Dalamud.Logging;
 using Dalamud.Utility;
@@ -1098,25 +1099,37 @@ namespace Dalamud.DiscordBridge
                     default:
                         // don't even bother searching if it's gonna be invalid
                         bool doSearch = true;
+                        
                         if (string.IsNullOrEmpty(senderName))
                         {
-                            PluginLog.Verbose($"Sender Name was null or empty: {senderName}");
+                            PluginLog.Debug($"Sender Name was null or empty");
+                            senderName = $"{$"{this.plugin.State.LocalPlayer?.Name} "}{chatType.GetFancyName()}";
+                            senderWorld = "";
                             doSearch = false;
                         }
                         if (string.IsNullOrEmpty(senderWorld))
                         {
-                            PluginLog.Verbose($"Sender World was null or empty: {senderWorld}");
+                            PluginLog.Debug($"Sender World was null or empty: {senderWorld}");
                             doSearch = false;
                         }
-                        if (senderName == "Sonar" || !senderName.Contains(" "))
+                        
+                        // special cases for things that aren't coming from FFXIV directly.
+                        if (senderName == "Sonar")
                         {
-                            PluginLog.Verbose($"Sender Name was a plugin or invalid: {senderName}");
+                            PluginLog.Debug($"Sender Name was {senderName}");
                             doSearch = false;
                         }
+                        else if (!senderName.Contains(" "))
+                        {
+                            PluginLog.Debug($"Sender Name invalid: {senderName}");
+                            doSearch = false;
+                        }
+
+
                         if (doSearch)
                         {
                             var playerCacheName = $"{senderName}＠{senderWorld}";
-                            PluginLog.Verbose($"Searching for {playerCacheName}");
+                            PluginLog.Debug($"Searching for {playerCacheName}");
                             
                             if (CachedResponses.TryGetValue(playerCacheName, out LodestoneCharacter lschar))
                             {
