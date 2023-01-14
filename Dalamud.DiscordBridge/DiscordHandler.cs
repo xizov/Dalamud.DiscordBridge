@@ -1103,7 +1103,7 @@ namespace Dalamud.DiscordBridge
                         if (string.IsNullOrEmpty(senderName))
                         {
                             PluginLog.Debug($"Sender Name was null or empty");
-                            senderName = $"{$"{this.plugin.State.LocalPlayer?.Name} "}{chatType.GetFancyName()}";
+                            senderName = $"FFXIV Bridge Worker {this.plugin.State.LocalPlayer?.Name}";
                             senderWorld = "";
                             doSearch = false;
                         }
