@@ -871,7 +871,7 @@ namespace Dalamud.DiscordBridge
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}setprefix", "Set a prefix for chat kinds. "
                             + $"This can be an emoji or a string that will be prepended to every chat message that will arrive with this chat kind. "
                             + $"You can also set it to `none` if you want to remove it.\n" 
-                            + $"Format: ``{this.plugin.Config.DiscordBotPrefix}setchannel <kind1,kind2,...> <prefix>``")
+                            + $"Format: ``{this.plugin.Config.DiscordBotPrefix}setprefix <kind1,kind2,...> <prefix>``")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}setcfprefix", "Set a prefix for duty finder posts. "
                             + $"You can also set it to `none` if you want to remove it.\n" 
                             + $"Format: ``{this.plugin.Config.DiscordBotPrefix}setcfprefix <prefix>``")
