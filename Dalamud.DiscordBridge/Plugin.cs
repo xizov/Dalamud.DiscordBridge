@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Data;
 using Dalamud.DiscordBridge.API;
@@ -11,7 +10,6 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;

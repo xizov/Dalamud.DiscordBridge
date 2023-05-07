@@ -1,24 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Linq;
-using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dalamud.DiscordBridge.Model;
-using Dalamud.DiscordBridge.XivApi;
-using Dalamud.Game.ClientState;
 using Dalamud.Game.Text;
 using Dalamud.Logging;
-using Dalamud.Utility;
 using Discord;
-using Discord.Net.Providers.WS4Net;
 using Discord.Webhook;
 using Discord.WebSocket;
 using Lumina.Text;
 using NetStone;
 using NetStone.Model.Parseables.Character;
-using NetStone.Model.Parseables.Search.Character;
 using NetStone.Search.Character;
 
 namespace Dalamud.DiscordBridge
@@ -106,7 +98,6 @@ namespace Dalamud.DiscordBridge
 
             this.socketClient = new DiscordSocketClient(new DiscordSocketConfig
             {
-                WebSocketProvider = WS4NetProvider.Instance,
                 MessageCacheSize = 20, // hold onto the last 20 messages per channel in cache for duplicate checks
                 GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMessages | GatewayIntents.GuildWebhooks | GatewayIntents.MessageContent,
             });

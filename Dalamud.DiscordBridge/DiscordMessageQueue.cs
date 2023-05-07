@@ -2,18 +2,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using Dalamud.DiscordBridge.Model;
-using Dalamud.DiscordBridge.XivApi;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
-using Dalamud.Plugin;
-using Lumina;
 
 namespace Dalamud.DiscordBridge
 {
