@@ -6,4 +6,5 @@
   "RepoUrl": "https://github.com/reiichi001/Dalamud.DiscordBridge",
   "Tags": [ "discord", "chat" ],
   "Punchline": "Receive your chat messages via Discord.",
+  "Changelog": "Adds the following new commands:\n- xl!toggleembed - Switches between Webhooks and classical Embeds\n- xl!togglesender - Toggles whether or not to include the sender name in the message content."
 }

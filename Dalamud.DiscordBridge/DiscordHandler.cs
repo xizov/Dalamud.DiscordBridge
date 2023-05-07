@@ -628,6 +628,32 @@ namespace Dalamud.DiscordBridge
                     return;
                 }
 
+                if (args[0] == this.plugin.Config.DiscordBotPrefix + "toggleembed" &&
+                    await EnsureOwner(message.Author, message.Channel))
+                {
+                    this.plugin.Config.ForceEmbedFallbackMode = !this.plugin.Config.ForceEmbedFallbackMode;
+                    this.plugin.Config.Save();
+
+                    await SendGenericEmbed(message.Channel,
+                        $"OK! Sending relayed messages in embed fallback mode have been {(this.plugin.Config.ForceEmbedFallbackMode ? "**enabled**." : "**disabled**.\n\nPlease make sure Discord Chat Bridge is allowed to manage webhooks in your channels as needed.")}",
+                        "Embed Fallback Mode set", EmbedColorFine);
+
+                    return;
+                }
+
+                if (args[0] == this.plugin.Config.DiscordBotPrefix + "togglesender" &&
+                    await EnsureOwner(message.Author, message.Channel))
+                {
+                    this.plugin.Config.SenderInMessage = !this.plugin.Config.SenderInMessage;
+                    this.plugin.Config.Save();
+
+                    await SendGenericEmbed(message.Channel,
+                        $"OK! Discord Chat Bridge **{(this.plugin.Config.SenderInMessage ? "will" : "will not")}** include the sender name in all messages (where possible).",
+                        "Sender In Message Mode set", EmbedColorFine);
+
+                    return;
+                }
+
                 if (args[0] == this.plugin.Config.DiscordBotPrefix + "setcfprefix" &&
                     await EnsureOwner(message.Author, message.Channel))
                 {
@@ -867,6 +893,8 @@ namespace Dalamud.DiscordBridge
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}unsetchannel", "Works like the previous command, but removes kinds of chat from the list of kinds that are sent to this channel.")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}listchannel", "List all chat kinds that are sent to this channel.")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}toggledf", "Enable or disable sending duty finder updates to this channel.")
+                        .AddField($"{this.plugin.Config.DiscordBotPrefix}toggleembed", "Enable or disable sending messages as Webhooks (default) or Embeds (Fallback mode)")
+                        .AddField($"{this.plugin.Config.DiscordBotPrefix}togglesender", "Enable or disable sending messages with the sender name in the message.")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}setduplicatems", "Set time in milliseconds that the bot will check to see if any past messages were the same. Default is 0 ms.")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}setprefix", "Set a prefix for chat kinds. "
                             + $"This can be an emoji or a string that will be prepended to every chat message that will arrive with this chat kind. "
@@ -1177,6 +1205,8 @@ namespace Dalamud.DiscordBridge
 
             this.plugin.Config.PrefixConfigs.TryGetValue(chatType, out var prefix);
 
+            bool senderInMessage = this.plugin.Config.SenderInMessage;
+
             var chatTypeText = this.plugin.Config.CustomSlugsConfigs.TryGetValue(chatType, out var x) ? x : chatType.GetSlug();
             
 
@@ -1201,7 +1231,9 @@ namespace Dalamud.DiscordBridge
                     continue;
                 }
 
-                var messageContent = chatType != XivChatTypeExtensions.IpcChatType ? $"{prefix}**[{chatTypeText}]** {message}" : $"{prefix} {message}";
+                var messageContent = senderInMessage ? $"{displayName}: {message}" : message;
+
+                messageContent = chatType != XivChatTypeExtensions.IpcChatType ? $"{prefix}**[{chatTypeText}]** {messageContent}" : $"{prefix} {messageContent}";
 
 
                 // add handling for webhook vs embed here
@@ -1214,6 +1246,10 @@ namespace Dalamud.DiscordBridge
                     var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
                     await SendPrettyEmbed((ISocketMessageChannel)DMChannel, messageContent, displayName, avatarUrl, EmbedColorFine);
                     PluginLog.Debug("SendChatEvent sent to DMs.");
+                }
+                else if (this.plugin.Config.ForceEmbedFallbackMode)
+                {
+                    await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"{messageContent}", $"{displayName}", avatarUrl, EmbedColorFine);
                 }
                 else if (!hasManageWebHooks)
                 {

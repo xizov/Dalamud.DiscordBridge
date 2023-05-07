@@ -27,6 +27,8 @@ namespace Dalamud.DiscordBridge
 
         public Dictionary<XivChatType, string> CustomSlugsConfigs { get; set; } = new Dictionary<XivChatType, string>();
         public string CFPrefixConfig { get; set; } = "";
+        public bool ForceEmbedFallbackMode { get; set; } = false;
+        public bool SenderInMessage { get; set; } = false;
 
         public void Initialize(DalamudPluginInterface pluginInterface)
         {
