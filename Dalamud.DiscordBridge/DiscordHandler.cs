@@ -641,6 +641,25 @@ namespace Dalamud.DiscordBridge
                     return;
                 }
 
+                if (args[0] == this.plugin.Config.DiscordBotPrefix + "toggledefaultnameavatar" &&
+                    await EnsureOwner(message.Author, message.Channel))
+                {
+                    this.plugin.Config.ForceDefaultNameAvatar = !this.plugin.Config.ForceDefaultNameAvatar;
+                    this.plugin.Config.Save();
+
+                    await SendGenericEmbed(message.Channel,
+                        $"OK! Sending relayed messages in embed fallback mode have been {(this.plugin.Config.ForceDefaultNameAvatar ? "**enabled**.\n\nPlease make sure you have toggled sender names on, or you won't know who said which chat messages!" : "**disabled**.")}",
+                        "Default Name and Avatar Mode set", EmbedColorFine);
+
+                    if (this.plugin.Config.ForceDefaultNameAvatar && this.socketClient.CurrentUser.Username.ToLower().Contains("discord"))
+                    {
+                        await SendGenericEmbed(message.Channel, "Bot username cannot contain Discord. Using a fallback value until this is changed.", "ERROR - Bot username cannot contain Discord", EmbedColorError);
+                    }
+
+                    return;
+                }
+                
+
                 if (args[0] == this.plugin.Config.DiscordBotPrefix + "togglesender" &&
                     await EnsureOwner(message.Author, message.Channel))
                 {
@@ -892,6 +911,7 @@ namespace Dalamud.DiscordBridge
                         //$"The following chat kinds are available:\n```all - All regular chat\n{XivChatTypeExtensions.TypeInfoDict.Select(x => $"{x.Value.Slug} - {x.Value.FancyName}").Aggregate((x, y) => x + "\n" + y)}```")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}unsetchannel", "Works like the previous command, but removes kinds of chat from the list of kinds that are sent to this channel.")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}listchannel", "List all chat kinds that are sent to this channel.")
+                        .AddField($"{this.plugin.Config.DiscordBotPrefix}toggledefaultnameavatar","Enable or disable sending webhook messages using your configured bot's name and the default bot avatar.\n**WARNING:**This should be combined with enabling the `togglesender` function or you will be removing any distinction between different player messages.")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}toggledf", "Enable or disable sending duty finder updates to this channel.")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}toggleembed", "Enable or disable sending messages as Webhooks (default) or Embeds (Fallback mode)")
                         .AddField($"{this.plugin.Config.DiscordBotPrefix}togglesender", "Enable or disable sending messages with the sender name in the message.")
@@ -997,6 +1017,10 @@ namespace Dalamud.DiscordBridge
             if (user.Username + "#" + user.Discriminator == this.plugin.Config.DiscordOwnerName) 
                 return true;
 
+            // bandaid for Discord's username changes.
+            if (user.Username == this.plugin.Config.DiscordOwnerName && user.Discriminator == "0000")
+                return true;
+
             if (ulong.TryParse(this.plugin.Config.DiscordOwnerName, out ulong parsed))
                 if (user.Id == parsed)
                     return true;
@@ -1004,7 +1028,7 @@ namespace Dalamud.DiscordBridge
             if (errorMessageChannel == null) 
                 return false;
 
-            await SendGenericEmbed(errorMessageChannel, "You are not allowed to run commands for this bot.\n\nIf this is your bot, please use the \"/pdiscord\" command in-game to enter your username.", "Error", EmbedColorError);
+            await SendGenericEmbed(errorMessageChannel, "You are not allowed to run commands for this bot.\n\nIf this is your bot, please use the \"/pdiscord\" command in-game to enter your username or Discord User ID number.", "Error", EmbedColorError);
 
             return false;
         }
@@ -1267,6 +1291,12 @@ namespace Dalamud.DiscordBridge
 
                     if (webhookClient != null)
                     {
+                        if (this.plugin.Config.ForceDefaultNameAvatar)
+                        {
+                            displayName = this.socketClient.CurrentUser.Username.ToLower().Contains("discord") ? "Dalamud Chat Bridge" : this.socketClient.CurrentUser.Username;
+                            avatarUrl = plugin.Config.DefaultAvatarURL;
+                        }
+                        
                         await webhookClient.SendMessageAsync(
                             messageContent, username: displayName, avatarUrl: avatarUrl,
                             allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)

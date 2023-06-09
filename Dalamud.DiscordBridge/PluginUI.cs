@@ -38,7 +38,7 @@ namespace Dalamud.DiscordBridge
             ImGui.Begin("Discord Bridge Setup", ref this.isVisible);
 
             ImGui.Text("In this window, you can set up the XIVLauncher Discord Bridge.\n\n" +
-                       "To begin, enter your discord bot token and username below, then click \"Save\".\n" +
+                       "To begin, enter your discord bot token and username or user ID number below, then click \"Save\".\n" +
                        "As soon as the red text says \"connected\", click the \"Join my server\" button and add the bot to one of your personal servers.\n" +
                        $"You can then use the {this.plugin.Config.DiscordBotPrefix}help command in your discord server to specify channels.");
 
