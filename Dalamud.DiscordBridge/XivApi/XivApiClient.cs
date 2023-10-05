@@ -2,8 +2,7 @@
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Dalamud.Logging;
-using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using Newtonsoft.Json.Linq;
 
 namespace Dalamud.DiscordBridge.XivApi
@@ -13,6 +12,8 @@ namespace Dalamud.DiscordBridge.XivApi
         private const string URL = "https://xivapi.com/";
 
         private static readonly ConcurrentDictionary<string, JObject> CachedResponses = new ConcurrentDictionary<string, JObject>();
+
+        static IPluginLog Logger = Service.Logger;
 
         /// <summary>
         /// Returns the searched character, or null if not found.
@@ -43,12 +44,12 @@ namespace Dalamud.DiscordBridge.XivApi
                 }
 
 
-                PluginLog.Error($"Couldn't find an icon for {name}@{world}");
+                Logger.Error($"Couldn't find an icon for {name}@{world}");
             }
             catch (Exception e)
             {
-                PluginLog.Error($"Encountered an error when searching for {name}@{world}");
-                PluginLog.Error(e.ToString());
+                Logger.Error($"Encountered an error when searching for {name}@{world}");
+                Logger.Error(e.ToString());
             }
             
 
@@ -59,7 +60,7 @@ namespace Dalamud.DiscordBridge.XivApi
         {
             var res =  await Get($"Item/{itemId}", true);
 
-            // PluginLog.Information($"XIVAPI result: {res}");
+            // Logger.Information($"XIVAPI result: {res}");
 
 
             return new ItemResult
@@ -84,7 +85,7 @@ namespace Dalamud.DiscordBridge.XivApi
 
         private static async Task<dynamic> Get(string endpoint, bool noCache = false)
         {
-            PluginLog.Verbose("XIVAPI FETCH: {0}", endpoint);
+            Logger.Verbose("XIVAPI FETCH: {0}", endpoint);
 
             if (CachedResponses.TryGetValue(endpoint, out var val) && !noCache)
                 return val;

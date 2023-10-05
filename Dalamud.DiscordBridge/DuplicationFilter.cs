@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-
 using Discord.WebSocket;
-
-using Dalamud.Logging;
 using Dalamud.Utility;
+using Dalamud.Plugin.Services;
 
 namespace Dalamud.DiscordBridge
 {
@@ -16,12 +14,14 @@ namespace Dalamud.DiscordBridge
     /// </summary>
     public class DuplicateFilter
     {
+        static IPluginLog Logger = Service.Logger;
+
         /// <summary>
         /// Constructs a <see cref="DuplicateFilter"/> to dedupe messages for the given socket client.
         /// </summary>
         /// <param name="plugin"></param>
         /// <param name="client">The socket client to monitor for duplicate messages.</param>
-        public DuplicateFilter(Plugin plugin, DiscordSocketClient client)
+        public DuplicateFilter(DiscordBridgePlugin plugin, DiscordSocketClient client)
         {
             this.plugin = plugin;
             
@@ -60,7 +60,7 @@ namespace Dalamud.DiscordBridge
             
             if (msgDiff < plugin.Config.DuplicateCheckMS)
             {
-                PluginLog.LogVerbose($"[FILTER] Filtered outgoing message as duplicate. Diff: {msgDiff}ms, Threshold: {plugin.Config.DuplicateCheckMS}ms");
+                Logger.Verbose($"[FILTER] Filtered outgoing message as duplicate. Diff: {msgDiff}ms, Threshold: {plugin.Config.DuplicateCheckMS}ms");
 
                 return true;
             }
@@ -152,7 +152,7 @@ namespace Dalamud.DiscordBridge
                 // 404 is expected if the message was already deleted.
                 if (ex.HttpCode != HttpStatusCode.NotFound)
                 {
-                    PluginLog.LogError($"[FILTER] Unexpected exception when attempting to delete a message.");
+                    Service.Logger.Error($"[FILTER] Unexpected exception when attempting to delete a message.");
                     
                     throw;
                 }
@@ -186,7 +186,7 @@ namespace Dalamud.DiscordBridge
         
         #region Private Data
 
-        private readonly Plugin plugin;
+        private readonly DiscordBridgePlugin plugin;
         
         private HashSet<SocketMessage> recentMessages = new();
 

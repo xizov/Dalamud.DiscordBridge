@@ -8,15 +8,16 @@ using Dalamud.DiscordBridge.Model;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 
 namespace Dalamud.DiscordBridge
 {
     public class DiscordMessageQueue
     {
+        static IPluginLog Logger = Service.Logger;
         private volatile bool runQueue = true;
 
-        private readonly Plugin plugin;
+        private readonly DiscordBridgePlugin Plugin;
         private readonly Thread runnerThread;
 
         private readonly ConcurrentQueue<QueuedXivEvent> eventQueue = new ConcurrentQueue<QueuedXivEvent>();
@@ -41,9 +42,9 @@ namespace Dalamud.DiscordBridge
             }
         };
 
-        public DiscordMessageQueue(Plugin plugin)
+        public DiscordMessageQueue(DiscordBridgePlugin plugin)
         {
-            this.plugin = plugin;
+            this.Plugin = plugin;
             this.runnerThread = new Thread(RunMessageQueue);
         }
 
@@ -88,7 +89,7 @@ namespace Dalamud.DiscordBridge
 
                                     if (itemLink == null)
                                     {
-                                        PluginLog.Error("itemLink was null. Msg: {0}", BitConverter.ToString(retainerSaleEvent.Message.Encode()));
+                                        Logger.Error("itemLink was null. Msg: {0}", BitConverter.ToString(retainerSaleEvent.Message.Encode()));
                                         break;
                                     }
                                     else
@@ -110,7 +111,7 @@ namespace Dalamud.DiscordBridge
                                         }
                                         catch (Exception ex)
                                         {
-                                            PluginLog.Error(ex, "Cannot fetch XIVAPI item search.");
+                                            Logger.Error(ex, "Cannot fetch XIVAPI item search.");
                                         }
                                         */
                                     }
@@ -122,31 +123,31 @@ namespace Dalamud.DiscordBridge
 
                                     //SendItemSaleEvent(uint itemId, int amount, bool isHq, string message, XivChatType chatType)
 
-                                    await this.plugin.Discord.SendItemSaleEvent(itemLink.Item.Name, avatarUrl, itemLink.Item.RowId, retainerSaleEvent.Message.TextValue, retainerSaleEvent.ChatType);
+                                    await this.Plugin.Discord.SendItemSaleEvent(itemLink.Item.Name, avatarUrl, itemLink.Item.RowId, retainerSaleEvent.Message.TextValue, retainerSaleEvent.ChatType);
                                 }
                             }
                             catch (Exception e)
                             {
-                                PluginLog.Error(e, "Could not send discord message.");
+                                Logger.Error(e, "Could not send discord message.");
                             }
                         }
 
                         if (resultEvent is QueuedChatEvent chatEvent)
                         {
                             var senderName = (chatEvent.ChatType == XivChatType.TellOutgoing || chatEvent.ChatType == XivChatType.Echo)
-                                ? this.plugin.State.LocalPlayer.Name
+                                ? Service.State.LocalPlayer.Name
                                 : chatEvent.Sender.ToString();
                             var senderWorld = string.Empty;
 
                             // for debugging. Make sure to comment this out for releases.
                             /*
-                            PluginLog.Debug($"Type: {chatEvent.ChatType} Sender: {chatEvent.Sender.TextValue} "
+                            Logger.Debug($"Type: {chatEvent.ChatType} Sender: {chatEvent.Sender.TextValue} "
                                 + $"Message: {chatEvent.Message.TextValue}");
                             */
 
                             try
                             {
-                                if (this.plugin.State.LocalPlayer != null)
+                                if (Service.State.LocalPlayer != null)
                                 {
                                     var playerLink = chatEvent.Sender.Payloads.FirstOrDefault(x => x.Type == PayloadType.Player) as PlayerPayload;
 
@@ -157,9 +158,9 @@ namespace Dalamud.DiscordBridge
 
                                         // Special case 2 - When the local player talks in party/alliance, the name comes through as raw text,
                                         // but prefixed by their position number in the party (which for local player may always be 1)
-                                        if (chatEvent.Sender.TextValue.EndsWith(this.plugin.State.LocalPlayer.Name.TextValue))
+                                        if (chatEvent.Sender.TextValue.EndsWith(Service.State.LocalPlayer.Name.TextValue))
                                         {
-                                            senderName = this.plugin.State.LocalPlayer.Name;
+                                            senderName = Service.State.LocalPlayer.Name;
                                         }
                                         else
                                         {
@@ -173,7 +174,7 @@ namespace Dalamud.DiscordBridge
                                                 case XivChatType.Notice:
                                                     break;
                                                 case XivChatType.TellOutgoing:
-                                                    senderName = this.plugin.State.LocalPlayer.Name;
+                                                    senderName = Service.State.LocalPlayer.Name;
                                                     // senderWorld = this.plugin.Interface.ClientState.LocalPlayer.HomeWorld.GameData.Name;
                                                     break;
                                                 case XivChatType.StandardEmote:
@@ -188,7 +189,7 @@ namespace Dalamud.DiscordBridge
                                                     */
                                                     break;
                                                 case XivChatType.Echo:
-                                                    senderName = this.plugin.State.LocalPlayer.Name;
+                                                    senderName = Service.State.LocalPlayer.Name;
                                                     // senderWorld = this.plugin.Interface.ClientState.LocalPlayer.HomeWorld.GameData.Name;
                                                     break;
                                                 case (XivChatType)61: // NPC Talk
@@ -208,7 +209,7 @@ namespace Dalamud.DiscordBridge
                                                         break;
                                                     if ((int)chatEvent.ChatType > 107) // don't handle anything past CWLS8 for now
                                                         break;
-                                                    PluginLog.Error($"playerLink was null.\nChatType: {chatEvent.ChatType} ({(int)chatEvent.ChatType}) Sender: {chatEvent.Sender.TextValue} Message: {chatEvent.Message.TextValue}");
+                                                    Logger.Error($"playerLink was null.\nChatType: {chatEvent.ChatType} ({(int)chatEvent.ChatType}) Sender: {chatEvent.Sender.TextValue} Message: {chatEvent.Message.TextValue}");
                                                     senderName = chatEvent.Sender.TextValue;
                                                     break;
                                             }
@@ -219,26 +220,26 @@ namespace Dalamud.DiscordBridge
 
                                         // only if we still need one
                                         if (senderWorld.Equals(string.Empty))
-                                            senderWorld = this.plugin.State.LocalPlayer.HomeWorld.GameData.Name;
+                                            senderWorld = Service.State.LocalPlayer.HomeWorld.GameData.Name;
 
-                                        // PluginLog.Information($"FRANZDEBUGGINGNULL Playerlink is null: {senderName}＠{senderWorld}");
+                                        // Logger.Information($"FRANZDEBUGGINGNULL Playerlink is null: {senderName}＠{senderWorld}");
                                     }
                                     else
                                     {
                                         senderName = chatEvent.ChatType == XivChatType.TellOutgoing
-                                            ? this.plugin.State.LocalPlayer.Name
+                                            ? Service.State.LocalPlayer.Name
                                             : playerLink.PlayerName;
                                         senderWorld = chatEvent.ChatType == XivChatType.TellOutgoing
-                                            ? this.plugin.State.LocalPlayer.HomeWorld.GameData.Name
+                                            ? Service.State.LocalPlayer.HomeWorld.GameData.Name
                                             : playerLink.World.Name;
-                                        // PluginLog.Information($"FRANZDEBUGGING Playerlink was not null: {senderName}＠{senderWorld}");
+                                        // Logger.Information($"FRANZDEBUGGING Playerlink was not null: {senderName}＠{senderWorld}");
                                     }
                                 }
                                 else
                                 {
                                     // only do this one if it's debug
                                     /*
-                                    PluginLog.Debug($"Plugin interface LocalPlayer was null.\n"
+                                    Logger.Debug($"Plugin interface LocalPlayer was null.\n"
                                         + $"ChatType: {chatEvent.ChatType} ({(int)chatEvent.ChatType}) Sender: {chatEvent.Sender.TextValue} Message: {chatEvent.Message.TextValue}");
                                     */
                                     senderName = string.Empty;
@@ -247,7 +248,7 @@ namespace Dalamud.DiscordBridge
                             }
                             catch(Exception ex)
                             {
-                                PluginLog.Error(ex, "Could not deduce player name.");
+                                Logger.Error(ex, "Could not deduce player name.");
                             }
 
                             string messagetext = "";
@@ -269,29 +270,29 @@ namespace Dalamud.DiscordBridge
 
                             try
                             {
-                                await this.plugin.Discord.SendChatEvent(messagetext, senderName.TextValue, senderWorld, chatEvent.ChatType, chatEvent.AvatarUrl);
+                                await this.Plugin.Discord.SendChatEvent(messagetext, senderName.TextValue, senderWorld, chatEvent.ChatType, chatEvent.AvatarUrl);
                             }
                             catch (Exception e)
                             {
-                                PluginLog.Error(e, "Could not send discord message.");
+                                Logger.Error(e, "Could not send discord message.");
                             }
                         }
 
                         if (resultEvent is QueuedContentFinderEvent cfEvent)
                             try
                             {
-                                await this.plugin.Discord.SendContentFinderEvent(cfEvent);
+                                await this.Plugin.Discord.SendContentFinderEvent(cfEvent);
                             }
                             catch (Exception e)
                             {
-                                PluginLog.Error(e, "Could not send discord message.");
+                                Logger.Error(e, "Could not send discord message.");
                             }
 
                         
                     }
                     catch (Exception e)
                     {
-                        PluginLog.Error(e, "Could not process event.");
+                        Logger.Error(e, "Could not process event.");
                     }
                 }
 

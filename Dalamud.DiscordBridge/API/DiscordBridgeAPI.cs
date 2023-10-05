@@ -7,9 +7,9 @@ namespace Dalamud.DiscordBridge.API
     public class DiscordBridgeAPI : IDiscordBridgeAPI
     {
         private readonly bool initialized;
-        private readonly Plugin plugin;
+        private readonly DiscordBridgePlugin plugin;
         
-        public DiscordBridgeAPI(Plugin plugin)
+        public DiscordBridgeAPI(DiscordBridgePlugin plugin)
         {
             this.plugin = plugin;
             this.initialized = true;

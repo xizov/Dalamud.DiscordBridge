@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dalamud.DiscordBridge.Model;
 using Dalamud.Game.Text;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using Discord;
 using Discord.Webhook;
 using Discord.WebSocket;
@@ -17,6 +17,8 @@ namespace Dalamud.DiscordBridge
 {
     public class DiscordHandler : IDisposable
     {
+        static IPluginLog Logger = Service.Logger;
+
         private readonly DuplicateFilter duplicateFilter;
         
         private readonly DiscordSocketClient socketClient;
@@ -32,7 +34,7 @@ namespace Dalamud.DiscordBridge
         /// </summary>
         public DiscordState State { get; private set; } = DiscordState.None;
 
-        private readonly Plugin plugin;
+        private readonly DiscordBridgePlugin plugin;
 
         /// <summary>
         /// Chat types that are set when used the "all" setting.
@@ -88,7 +90,7 @@ namespace Dalamud.DiscordBridge
 
         private LodestoneClient lodestoneClient;
 
-        public DiscordHandler(Plugin plugin)
+        public DiscordHandler(DiscordBridgePlugin plugin)
         {
             this.plugin = plugin;
 
@@ -96,11 +98,13 @@ namespace Dalamud.DiscordBridge
 
             this.MessageQueue = new DiscordMessageQueue(this.plugin);
 
+            Logger.Debug("BEFORE DiscordSocketClient");
             this.socketClient = new DiscordSocketClient(new DiscordSocketConfig
             {
                 MessageCacheSize = 20, // hold onto the last 20 messages per channel in cache for duplicate checks
                 GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMessages | GatewayIntents.GuildWebhooks | GatewayIntents.MessageContent,
             });
+            Logger.Debug("AFTER DiscordSocketClient");
             this.socketClient.Ready += SocketClientOnReady;
             this.socketClient.MessageReceived += SocketClientOnMessageReceived;
             
@@ -114,7 +118,7 @@ namespace Dalamud.DiscordBridge
             {
                 this.State = DiscordState.TokenInvalid;
 
-                PluginLog.Error("Token empty, cannot start bot.");
+                Logger.Error("Token empty, cannot start bot.");
                 return;
             }
 
@@ -125,14 +129,14 @@ namespace Dalamud.DiscordBridge
             }
             catch (Exception ex)
             {
-                PluginLog.Error(ex, "Token invalid, cannot start bot.");
+                Logger.Error(ex, "Token invalid, cannot start bot.");
             }
 
             this.MessageQueue.Start();
 
             lodestoneClient = await LodestoneClient.GetClientAsync();
 
-            PluginLog.Debug("DiscordHandler START!!");
+            Logger.Debug("DiscordHandler START!!");
         }
 
         private Task SocketClientOnReady()
@@ -140,7 +144,7 @@ namespace Dalamud.DiscordBridge
             this.State = DiscordState.Ready;
             this.specialChars.TryFindEmote(this.socketClient);
 
-            PluginLog.Verbose("DiscordHandler READY!!");
+            Logger.Verbose("DiscordHandler READY!!");
             
             return Task.CompletedTask;
         }
@@ -160,11 +164,11 @@ namespace Dalamud.DiscordBridge
             // this is only needed for debugging purposes.
             foreach (var s in args)
             {
-                PluginLog.Verbose(s);
+                Logger.Verbose(s);
             }
             */
 
-            PluginLog.Verbose("Received command: {0}", args[0]);
+            Logger.Verbose("Received command: {0}", args[0]);
 
             try
             {
@@ -188,7 +192,7 @@ namespace Dalamud.DiscordBridge
                         .Any(x =>
                         XivChatTypeExtensions.TypeInfoDict.All(y => y.Value.Slug != x) && x != "any"))
                     {
-                        PluginLog.Verbose("Could not find kinds");
+                        Logger.Verbose("Could not find kinds");
                         await SendGenericEmbed(message.Channel,
                             $"One or more of the chat kinds you specified could not be found.\nCheck the ``{this.plugin.Config.DiscordBotPrefix}help`` command for more information.",
                             "Error", EmbedColorError);
@@ -201,7 +205,7 @@ namespace Dalamud.DiscordBridge
 
                     foreach (var selectedKind in kinds)
                     {
-                        PluginLog.Verbose(selectedKind);
+                        Logger.Verbose(selectedKind);
 
                         if (selectedKind == "any")
                         {
@@ -452,7 +456,7 @@ namespace Dalamud.DiscordBridge
                     var kinds = args[1].Split(',').Select(x => x.ToLower());
                     var chatChannelOverride = string.Join(" ", args.Skip(2)).Trim('"');
 
-                    // PluginLog.Information($"arg1: {args[1]}; arg2: {chatChannelOverride}");
+                    // Logger.Information($"arg1: {args[1]}; arg2: {chatChannelOverride}");
 
                     // Is there any chat type that's not recognized?
                     if (kinds.Any(x =>
@@ -526,7 +530,7 @@ namespace Dalamud.DiscordBridge
 
                     var kinds = args[1].Split(',').Select(x => x.ToLower());
 
-                    PluginLog.Information($"Unsetting custom type name for arg1: {args[1]}");
+                    Logger.Information($"Unsetting custom type name for arg1: {args[1]}");
 
                     // Is there any chat type that's not recognized?
                     if (kinds.Any(x =>
@@ -845,7 +849,7 @@ namespace Dalamud.DiscordBridge
 
                     var kinds = args[1].Split(',').Select(x => x.ToLower());
 
-                    // PluginLog.Information($"Looking for `{chatTypeSlug}`");
+                    // Logger.Information($"Looking for `{chatTypeSlug}`");
 
                     // Is there any chat type that's not recognized?
                     if (kinds.Any(x =>
@@ -899,7 +903,7 @@ namespace Dalamud.DiscordBridge
 
                 if (args[0] == this.plugin.Config.DiscordBotPrefix + "help")
                 {
-                    PluginLog.Verbose("Help time");
+                    Logger.Verbose("Help time");
 
                     var builder = new EmbedBuilder()
                         .WithTitle("Discord Bridge Help")
@@ -954,14 +958,14 @@ namespace Dalamud.DiscordBridge
                             embed: embed)
                         .ConfigureAwait(false);
                     ;
-                    PluginLog.Verbose(m.Id.ToString());
+                    Logger.Verbose(m.Id.ToString());
 
                     return;
                 }
             }
             catch (Exception ex)
             {
-                PluginLog.Error(ex, "Could not handle incoming Discord message.");
+                Logger.Error(ex, "Could not handle incoming Discord message.");
             }
         }
 
@@ -1013,7 +1017,7 @@ namespace Dalamud.DiscordBridge
         /// <returns>True if the user is the owner of this plugin.</returns>
         private async Task<bool> EnsureOwner(IUser user, ISocketMessageChannel errorMessageChannel = null)
         {
-            PluginLog.Verbose("EnsureOwner: " + user.Username + "#" + user.Discriminator);
+            Logger.Verbose("EnsureOwner: " + user.Username + "#" + user.Discriminator);
             if (user.Username + "#" + user.Discriminator == this.plugin.Config.DiscordOwnerName) 
                 return true;
 
@@ -1044,7 +1048,7 @@ namespace Dalamud.DiscordBridge
             message = this.specialChars.TransformToUnicode(message);
 
             
-            PluginLog.Information($"Retainer sold itemID: {itemId} with iconurl: {iconurl}");
+            Logger.Information($"Retainer sold itemID: {itemId} with iconurl: {iconurl}");
 
             this.plugin.Config.PrefixConfigs.TryGetValue(chatType, out var prefix);
 
@@ -1054,7 +1058,7 @@ namespace Dalamud.DiscordBridge
 
                 if (socketChannel == null)
                 {
-                    PluginLog.Error("Could not find channel {0} for {1}", channelConfig.Key, chatType);
+                    Logger.Error("Could not find channel {0} for {1}", channelConfig.Key, chatType);
                     continue;
                 }
 
@@ -1070,7 +1074,7 @@ namespace Dalamud.DiscordBridge
                 }
                 else if (!hasManageWebHooks)
                 {
-                    PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - No permission\n");
+                    Logger.Debug("FALLBACKMODE - Unable to create WebHook - No permission\n");
                     await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\n\nMissing ManageWebHooks permission.\n\n{message}", $"Retainer sold {name}", iconurl, EmbedColorError);
                 }
                 else
@@ -1083,7 +1087,7 @@ namespace Dalamud.DiscordBridge
                     }
                     else
                     {
-                        PluginLog.Debug("FALLBACKMODE - Unable to create WebHook\n");
+                        Logger.Debug("FALLBACKMODE - Unable to create WebHook\n");
                         await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\nUnable to create WebHook\n\n{message}", $"Retainer sold {name}", iconurl, EmbedColorError);
                     }
                     
@@ -1145,26 +1149,26 @@ namespace Dalamud.DiscordBridge
                         
                         if (string.IsNullOrEmpty(senderName))
                         {
-                            PluginLog.Debug($"Sender Name was null or empty");
-                            senderName = $"FFXIV Bridge Worker {this.plugin.State.LocalPlayer?.Name}";
+                            Logger.Debug($"Sender Name was null or empty");
+                            senderName = $"FFXIV Bridge Worker {Service.State.LocalPlayer?.Name}";
                             senderWorld = "";
                             doSearch = false;
                         }
                         if (string.IsNullOrEmpty(senderWorld))
                         {
-                            PluginLog.Debug($"Sender World was null or empty: {senderWorld}");
+                            Logger.Debug($"Sender World was null or empty: {senderWorld}");
                             doSearch = false;
                         }
                         
                         // special cases for things that aren't coming from FFXIV directly.
                         if (senderName == "Sonar")
                         {
-                            PluginLog.Debug($"Sender Name was {senderName}");
+                            Logger.Debug($"Sender Name was {senderName}");
                             doSearch = false;
                         }
                         else if (!senderName.Contains(" "))
                         {
-                            PluginLog.Debug($"Sender Name invalid: {senderName}");
+                            Logger.Debug($"Sender Name invalid: {senderName}");
                             doSearch = false;
                         }
 
@@ -1172,16 +1176,16 @@ namespace Dalamud.DiscordBridge
                         if (doSearch)
                         {
                             var playerCacheName = $"{senderName}＠{senderWorld}";
-                            PluginLog.Debug($"Searching for {playerCacheName}");
+                            Logger.Debug($"Searching for {playerCacheName}");
                             
                             if (CachedResponses.TryGetValue(playerCacheName, out LodestoneCharacter lschar))
                             {
-                                PluginLog.Debug($"Retrived cached data for {lschar.Name} {lschar.Avatar.ToString()}");
+                                Logger.Debug($"Retrived cached data for {lschar.Name} {lschar.Avatar.ToString()}");
                                 avatarUrl = lschar.Avatar.ToString();
                             }
                             else
                             {
-                                PluginLog.Debug($"Searching lodestone for {playerCacheName}");
+                                Logger.Debug($"Searching lodestone for {playerCacheName}");
 
                                 var searchPage = await lodestoneClient.SearchCharacter(new CharacterSearchQuery
                                 {
@@ -1198,7 +1202,7 @@ namespace Dalamud.DiscordBridge
                                 lschar = await matchingEntry.GetCharacter();
 
                                 CachedResponses.TryAdd(playerCacheName, lschar);
-                                PluginLog.Debug($"Adding cached data for {lschar.Name} {lschar.Avatar}");
+                                Logger.Debug($"Adding cached data for {lschar.Name} {lschar.Avatar}");
                                 avatarUrl = lschar.Avatar.ToString();
                             }
 
@@ -1212,12 +1216,12 @@ namespace Dalamud.DiscordBridge
             {
                 if (string.IsNullOrEmpty(senderName))
                 {
-                    PluginLog.Error($"senderName was null or empty. How did we get this far?");
+                    Logger.Error($"senderName was null or empty. How did we get this far?");
                     senderName = "Bridge Error - sendername";
                 }
                 else
                 {
-                    PluginLog.Error(ex, $"Cannot fetch XIVAPI character search for {senderName} on {senderWorld}");
+                    Logger.Error(ex, $"Cannot fetch XIVAPI character search for {senderName} on {senderWorld}");
                 }
                 
                 characterSearchFailed = true;
@@ -1240,15 +1244,15 @@ namespace Dalamud.DiscordBridge
 
                 if (socketChannel == null)
                 {
-                    PluginLog.Error("Could not find channel {0} for {1}", channelConfig.Key, chatType);
+                    Logger.Error("Could not find channel {0} for {1}", channelConfig.Key, chatType);
 
                     if (!characterSearchFailed)
                     {
                         var channelConfigs = this.plugin.Config.ChannelConfigs;
                         channelConfigs.Remove(channelConfig.Key);
                         this.plugin.Config.ChannelConfigs = channelConfigs;
-
-                        PluginLog.Log("Removing channel {0}'s config because it no longer exists or cannot be accessed.", channelConfig.Key);
+                        
+                        Logger.Info("Removing channel {0}'s config because it no longer exists or cannot be accessed.", channelConfig.Key);
                         this.plugin.Config.Save();
                     }
                     
@@ -1269,7 +1273,7 @@ namespace Dalamud.DiscordBridge
                 {
                     var DMChannel = await this.socketClient.GetDMChannelAsync(channelConfig.Key);
                     await SendPrettyEmbed((ISocketMessageChannel)DMChannel, messageContent, displayName, avatarUrl, EmbedColorFine);
-                    PluginLog.Debug("SendChatEvent sent to DMs.");
+                    Logger.Debug("SendChatEvent sent to DMs.");
                 }
                 else if (this.plugin.Config.ForceEmbedFallbackMode)
                 {
@@ -1277,7 +1281,7 @@ namespace Dalamud.DiscordBridge
                 }
                 else if (!hasManageWebHooks)
                 {
-                    PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - No Permission\n");
+                    Logger.Debug("FALLBACKMODE - Unable to create WebHook - No Permission\n");
                     await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\n\nMissing ManageWebHooks permission.\n\n{messageContent}", $"{displayName}", avatarUrl, EmbedColorError);
                 }
                 else
@@ -1301,11 +1305,11 @@ namespace Dalamud.DiscordBridge
                             messageContent, username: displayName, avatarUrl: avatarUrl,
                             allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)
                         );
-                        PluginLog.Debug("SendChatEvent sent to WebHook.");
+                        Logger.Debug("SendChatEvent sent to WebHook.");
                     }
                     else
                     {
-                        PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - Unknown failure\n");
+                        Logger.Debug("FALLBACKMODE - Unable to create WebHook - Unknown failure\n");
                         await SendPrettyEmbed((ISocketMessageChannel)socketChannel, $"FALLBACKMODE\n\nUnable to create WebHook\n\n{messageContent}", $"{displayName}", avatarUrl, EmbedColorError);
                     }
                 }
@@ -1330,7 +1334,7 @@ namespace Dalamud.DiscordBridge
                 .WithFooter(footer =>
                 {
                     footer
-                        .WithText("For: " + this.plugin.State.LocalPlayer?.Name)
+                        .WithText("For: " + Service.State.LocalPlayer?.Name)
                         .WithIconUrl(Constant.LogoLink);
                 });
 
@@ -1340,7 +1344,7 @@ namespace Dalamud.DiscordBridge
 
                 if (socketChannel == null)
                 {
-                    PluginLog.Error("Could not find channel {0} for cfc", channelConfig.Key);
+                    Logger.Error("Could not find channel {0} for cfc", channelConfig.Key);
                     continue;
                 }
 
@@ -1359,7 +1363,7 @@ namespace Dalamud.DiscordBridge
                 }
                 else if (!hasManageWebHooks)
                 {
-                    PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - No Permission\n");
+                    Logger.Debug("FALLBACKMODE - Unable to create WebHook - No Permission\n");
                     embedBuilder
                         .WithAuthor(new EmbedAuthorBuilder { Name = "Dalamud Chat Bridge", IconUrl = Constant.LogoLink })
                         .WithDescription("FALLBACKMODE - Unable to create WebHook - Missing ManageWebHook permission.");
@@ -1377,7 +1381,7 @@ namespace Dalamud.DiscordBridge
                     }
                     else
                     {
-                        PluginLog.Debug("FALLBACKMODE - Unable to create WebHook - Unknown error\n");
+                        Logger.Debug("FALLBACKMODE - Unable to create WebHook - Unknown error\n");
                         embedBuilder
                             .WithAuthor(new EmbedAuthorBuilder { Name = "Dalamud Chat Bridge", IconUrl = Constant.LogoLink })
                             .WithDescription("FALLBACKMODE - Unable to create WebHook - Unknown failure");
@@ -1413,7 +1417,7 @@ namespace Dalamud.DiscordBridge
                 }
                 catch (Discord.Net.HttpException e)
                 {
-                    PluginLog.Error("Unable to get or create webhook", e.StackTrace);
+                    Logger.Error("Unable to get or create webhook", e.StackTrace);
                     return null;
                 }
             }
@@ -1422,14 +1426,14 @@ namespace Dalamud.DiscordBridge
             this.plugin.Config.ChannelConfigs[channel.Id].WebhookId = hook.Id;
             this.plugin.Config.Save();
 
-            PluginLog.Verbose("Webhook for {0} OK!! {1}", channel.Id, hook.Id);
+            Logger.Verbose("Webhook for {0} OK!! {1}", channel.Id, hook.Id);
 
             return new DiscordWebhookClient(hook);
         }
 
         public void Dispose()
         {
-            PluginLog.Verbose("Discord DISPOSE!!");
+            Logger.Verbose("Discord DISPOSE!!");
             this.MessageQueue?.Stop();
             this.socketClient?.LogoutAsync().GetAwaiter().GetResult();
             this.socketClient?.Dispose();

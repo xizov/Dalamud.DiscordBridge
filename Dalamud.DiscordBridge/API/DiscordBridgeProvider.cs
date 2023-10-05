@@ -1,12 +1,14 @@
 using System;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 
 namespace Dalamud.DiscordBridge.API
 {
     public class DiscordBridgeProvider
     {
+        static IPluginLog Logger = Service.Logger;
+
         private const string LabelProviderApiVersion = "DiscordBridge.APIVersion";
         private const string LabelProviderSendMessage = "DiscordBridge.SendMessage";
 
@@ -26,7 +28,7 @@ namespace Dalamud.DiscordBridge.API
             }
             catch (Exception ex)
             {
-                PluginLog.LogError($"Error registering IPC provider:\n{ex}");
+                Logger.Error($"Error registering IPC provider:\n{ex}");
             }
         }
         

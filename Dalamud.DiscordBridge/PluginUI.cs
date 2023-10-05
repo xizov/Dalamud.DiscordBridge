@@ -1,17 +1,18 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using ImGuiNET;
 
 namespace Dalamud.DiscordBridge
 {
     public class PluginUI
     {
-        private readonly Plugin plugin;
+        static IPluginLog Logger = Service.Logger;
+        private readonly DiscordBridgePlugin Plugin;
 
-        public PluginUI(Plugin plugin)
+        public PluginUI(DiscordBridgePlugin plugin)
         {
-            this.plugin = plugin;
+            this.Plugin = plugin;
         }
 
         private bool isVisible;
@@ -24,8 +25,8 @@ namespace Dalamud.DiscordBridge
 
         public void Show()
         {
-            this.token = this.plugin.Config.DiscordToken;
-            this.username = this.plugin.Config.DiscordOwnerName;
+            this.token = this.Plugin.Config.DiscordToken;
+            this.username = this.Plugin.Config.DiscordOwnerName;
 
             this.isVisible = true;
         }
@@ -40,7 +41,7 @@ namespace Dalamud.DiscordBridge
             ImGui.Text("In this window, you can set up the XIVLauncher Discord Bridge.\n\n" +
                        "To begin, enter your discord bot token and username or user ID number below, then click \"Save\".\n" +
                        "As soon as the red text says \"connected\", click the \"Join my server\" button and add the bot to one of your personal servers.\n" +
-                       $"You can then use the {this.plugin.Config.DiscordBotPrefix}help command in your discord server to specify channels.");
+                       $"You can then use the {this.Plugin.Config.DiscordBotPrefix}help command in your discord server to specify channels.");
 
             ImGui.Dummy(new Vector2(10, 10));
 
@@ -52,7 +53,7 @@ namespace Dalamud.DiscordBridge
             ImGui.Text("Status: ");
             ImGui.SameLine();
 
-            var message = this.plugin.Discord.State switch
+            var message = this.Plugin.Discord.State switch
             {
                 DiscordState.None => "Not started",
                 DiscordState.Ready => "Connected!",
@@ -60,12 +61,12 @@ namespace Dalamud.DiscordBridge
                 _ => "Unknown"
             };
 
-            ImGui.TextColored(this.plugin.Discord.State == DiscordState.Ready ? fineColor : errorColor, message);
-            if (this.plugin.Discord.State == DiscordState.Ready && ImGui.Button("Join my server"))
+            ImGui.TextColored(this.Plugin.Discord.State == DiscordState.Ready ? fineColor : errorColor, message);
+            if (this.Plugin.Discord.State == DiscordState.Ready && ImGui.Button("Join my server"))
             {
                 Process.Start(
                     new ProcessStartInfo { 
-                        FileName = $"https://discordapp.com/oauth2/authorize?client_id={this.plugin.Discord.UserId}&scope=bot&permissions=2684742720", UseShellExecute = true 
+                        FileName = $"https://discordapp.com/oauth2/authorize?client_id={this.Plugin.Discord.UserId}&scope=bot&permissions=2684742720", UseShellExecute = true 
                     } 
                 );
             }
@@ -87,15 +88,15 @@ namespace Dalamud.DiscordBridge
 
             if (ImGui.Button("Save"))
             {
-                PluginLog.Verbose("Reloading Discord...");
+                Logger.Verbose("Reloading Discord...");
 
-                this.plugin.Config.DiscordToken = this.token;
-                this.plugin.Config.DiscordOwnerName = this.username;
-                this.plugin.Config.Save();
+                this.Plugin.Config.DiscordToken = this.token;
+                this.Plugin.Config.DiscordOwnerName = this.username;
+                this.Plugin.Config.Save();
 
-                this.plugin.Discord.Dispose();
-                this.plugin.Discord = new DiscordHandler(this.plugin);
-                _ = this.plugin.Discord.Start();
+                this.Plugin.Discord.Dispose();
+                this.Plugin.Discord = new DiscordHandler(this.Plugin);
+                _ = this.Plugin.Discord.Start();
             }
         }
     }
