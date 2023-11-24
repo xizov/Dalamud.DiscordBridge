@@ -1,5 +1,5 @@
 name: Feature Request
-description: If you want to request a feature for the launcher, please do so here.
+description: If you want to request a feature for the Discord Chat Bridge plugin, please do so here.
 labels: ["enhancement"]
 assignees:
   - octocat
@@ -12,7 +12,7 @@ body:
     id: terms
     attributes:
       label: Update disclaimer
-      description: If the game recently updated, XIVLauncher and plugins will not work. They need to be updated first. You can get notified about updates on our Discord.
+      description: If the game recently updated, XIVLauncher and plugins will not work. They need to be updated first. You can get notified about updates on he [XIVLauncher & Dalamud Discord](https://discord.com/invite/holdshift).
       options:
         - label: Yes, I have checked and my request is not related to the game updating and plugins not working correctly.
           required: true
@@ -22,7 +22,6 @@ body:
       label: Platform
       description: Where are you running XIVLauncher?
       options:
-        - Applies to all
         - Windows
         - Linux
         - macOS

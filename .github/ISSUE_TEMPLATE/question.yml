@@ -1,5 +1,5 @@
 name: Questions about the plugin
-description: If you have a question about the plugin or how to use it, please do ask here. If you have multiple disjoint questions, please open additional issues.
+description: If you have a question about the plugin or how to use it, please do ask here. If you have multiple separate questions, please open additional issues.
 labels: ["question"]
 assignees:
   - octocat
@@ -22,7 +22,6 @@ body:
       label: Platform
       description: Where are you running XIVLauncher?
       options:
-        - Applies to all
         - Windows
         - Linux
         - macOS
