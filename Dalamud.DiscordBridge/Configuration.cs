@@ -17,6 +17,7 @@ namespace Dalamud.DiscordBridge
 
         public string DiscordToken { get; set; } = string.Empty;
         public string DiscordOwnerName { get; set; } = string.Empty;
+        public string DiscordMentionId { get; set; } = string.Empty;
         public string DiscordBotPrefix { get; set; } = "xl!";
 
         public string DefaultAvatarURL = Constant.LogoLink;

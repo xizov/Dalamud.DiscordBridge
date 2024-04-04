@@ -1123,6 +1123,28 @@ namespace Dalamud.DiscordBridge
                 
             }
 
+            if (message.Contains("Alarm triggered"))
+            {
+                
+                var channelConfig =
+                    this.plugin.Config.ChannelConfigs.First();
+                
+                var socketChannel = this.socketClient.GetChannel(channelConfig.Key);
+            
+                var webhookClient = await GetOrCreateWebhookClient(socketChannel);
+            
+                message += " <@"+ this.plugin.Config.DiscordMentionId +">";
+            
+                await webhookClient.SendMessageAsync(
+                    message, username: "Bozja",
+                    allowedMentions: new AllowedMentions(AllowedMentionTypes.Roles | AllowedMentionTypes.Users | AllowedMentionTypes.None)
+                );
+                
+                Logger.Error("Message: " + message + "; chatType: " + chatType);
+
+                return;
+            }
+
             var applicableChannels =
                 this.plugin.Config.ChannelConfigs.Where(x => x.Value.ChatTypes.Contains(chatType));
 
@@ -1262,6 +1284,11 @@ namespace Dalamud.DiscordBridge
                 var messageContent = senderInMessage ? $"{displayName}: {message}" : message;
 
                 messageContent = chatType != XivChatTypeExtensions.IpcChatType ? $"{prefix}**[{chatTypeText}]** {messageContent}" : $"{prefix} {messageContent}";
+
+                if (messageContent.Contains("Click to copy"))
+                {
+                    messageContent += " <@"+ this.plugin.Config.DiscordMentionId +">";
+                }
 
 
                 // add handling for webhook vs embed here

@@ -19,6 +19,7 @@ namespace Dalamud.DiscordBridge
 
         private string token;
         private string username;
+        private string mentionId;
 
         private static Vector4 errorColor = new Vector4(1f, 0f, 0f, 1f);
         private static Vector4 fineColor = new Vector4(0.337f, 1f, 0.019f, 1f);
@@ -27,6 +28,7 @@ namespace Dalamud.DiscordBridge
         {
             this.token = this.Plugin.Config.DiscordToken;
             this.username = this.Plugin.Config.DiscordOwnerName;
+            this.mentionId = this.Plugin.Config.DiscordMentionId;
 
             this.isVisible = true;
         }
@@ -47,6 +49,7 @@ namespace Dalamud.DiscordBridge
 
             ImGui.InputText("Enter your bot token", ref this.token, 100);
             ImGui.InputText("Enter your Username(e.g. user#0000)", ref this.username, 50);
+            ImGui.InputText("Enter your discord ID for mentions", ref this.mentionId, 50);
 
             ImGui.Dummy(new Vector2(10, 10));
 
@@ -92,6 +95,7 @@ namespace Dalamud.DiscordBridge
 
                 this.Plugin.Config.DiscordToken = this.token;
                 this.Plugin.Config.DiscordOwnerName = this.username;
+                this.Plugin.Config.DiscordMentionId = this.mentionId;
                 this.Plugin.Config.Save();
 
                 this.Plugin.Discord.Dispose();
